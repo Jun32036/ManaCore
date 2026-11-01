@@ -27,7 +27,7 @@ import java.util.UUID;
 /** /mana 玩家指令 */
 public final class ManaCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("help", "status", "skills", "dex", "orders", "board", "request", "projects",
+    private static final List<String> SUBS = List.of("help", "status", "skills", "dex", "orders", "board", "request", "projects", "alchemy", "market", "sell",
             "give", "donate", "tree", "work", "comment", "comments", "mentor", "log");
 
     private final ManaCorePlugin plugin;
@@ -50,7 +50,8 @@ public final class ManaCommand implements TabExecutor {
         String sub = args.length == 0 ? "" : args[0].toLowerCase();
         String[] rest = args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length);
         switch (sub) {
-            case "", "menu", "gui" -> plugin.menu().openMain(p);
+            case "", "menu", "gui" -> plugin.openHub(p);
+            case "chest" -> plugin.menu().openMain(p);
             case "status", "info" -> status(p, d);
             case "give" -> give(p, d, rest);
             case "donate" -> donate(p, d, rest);
@@ -63,7 +64,10 @@ public final class ManaCommand implements TabExecutor {
             case "skills", "skill", "craft" -> plugin.econMenu().openSkills(p);
             case "dex", "collection" -> plugin.econMenu().openDex(p);
             case "orders", "order" -> plugin.econMenu().openOrders(p);
-            case "board", "commissions" -> plugin.econMenu().openBoard(p);
+            case "board", "commissions" -> plugin.econMenu().openBoard(p, 0);
+            case "alchemy", "alch", "transmute" -> plugin.alchemyMenu().open(p, 0);
+            case "market", "shop", "ah" -> plugin.marketMenu().open(p, 0);
+            case "sell" -> { if (plugin.market().list(p, p.getInventory().getHeldItemSlot())) plugin.marketMenu().open(p, 0); }
             case "request" -> request(p, rest);
             case "projects", "project" -> plugin.econMenu().openProjects(p);
             default -> help(p);
@@ -107,6 +111,10 @@ public final class ManaCommand implements TabExecutor {
                 "<white>/mana request <數量> <酬謝></white> <gray>徵求手上拿的物品</gray>",
                 "<white>/mana request service <酬謝> <說明></white> <gray>請人幫忙做一件事</gray>",
                 "<white>/mana projects</white> <gray>社區工程：一起蓋公共建設</gray>",
+                "<white>/mana alchemy</white> <gray>煉金爐：多餘的物品等價換成其他物品</gray>",
+                "<white>/mana market</white> <gray>玩家市集：公定價買賣</gray>",
+                "<white>/mana sell</white> <gray>把手上的物品整疊上架</gray>",
+                "<gray>小技巧：蹲下按 F 也能打開選單；舊版客戶端看不到對話框時用 /mana chest</gray>",
                 "<white>/thanks <玩家> [原因]</white> <gray>感謝別人，對方會得到 mana</gray>",
                 "<white>/mana give <玩家> <數量> [留言]</white> <gray>把 mana 送給別人</gray>",
                 "<white>/mana donate <數量></white> <gray>獻給生命之樹，讓全服一起成長</gray>",

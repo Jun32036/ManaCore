@@ -96,7 +96,7 @@ public final class PlayerListener implements Listener {
         if (!p.isSneaking()) return;
         e.setCancelled(true);
         plugin.mana().touch(p);
-        plugin.menu().openMain(p);
+        plugin.openHub(p);
     }
 
     // ---------------- 成就：達成原版成就得到大量 mana（一次性，本來就刷不了） ----------------

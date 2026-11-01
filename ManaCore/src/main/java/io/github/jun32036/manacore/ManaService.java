@@ -145,6 +145,19 @@ public final class ManaService {
                     }
                 }
             }
+            try (PreparedStatement ps = c.prepareStatement("SELECT av FROM alchemy WHERE uuid=?")) {
+                ps.setString(1, id);
+                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) d.alchemy = rs.getLong(1); }
+            }
+            try (PreparedStatement ps = c.prepareStatement("SELECT material FROM alchemy_known WHERE uuid=?")) {
+                ps.setString(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        org.bukkit.Material m = org.bukkit.Material.matchMaterial(rs.getString(1));
+                        if (m != null) d.alchemyKnown.add(m);
+                    }
+                }
+            }
             try (PreparedStatement ps = c.prepareStatement("SELECT idx, bundles FROM order_contrib WHERE day=? AND uuid=?")) {
                 ps.setString(1, day);
                 ps.setString(2, id);

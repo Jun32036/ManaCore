@@ -62,6 +62,11 @@ public final class Database {
                     s.execute("CREATE INDEX IF NOT EXISTS commissions_status ON commissions(status)");
                     s.execute("CREATE TABLE IF NOT EXISTS project_state(project TEXT PRIMARY KEY, status TEXT, mana INTEGER NOT NULL DEFAULT 0, finished INTEGER)");
                     s.execute("CREATE TABLE IF NOT EXISTS project_needs(project TEXT, material TEXT, have INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(project, material))");
+                    // ---- 1.5.0 煉金與市集 ----
+                    s.execute("CREATE TABLE IF NOT EXISTS alchemy(uuid TEXT PRIMARY KEY, av INTEGER NOT NULL DEFAULT 0)");
+                    s.execute("CREATE TABLE IF NOT EXISTS alchemy_known(uuid TEXT, material TEXT, PRIMARY KEY(uuid, material))");
+                    s.execute("CREATE TABLE IF NOT EXISTS market(id INTEGER PRIMARY KEY AUTOINCREMENT, created INTEGER, seller TEXT, seller_name TEXT, material TEXT, amount INTEGER, price INTEGER, status TEXT, items BLOB, finished INTEGER)");
+                    s.execute("CREATE INDEX IF NOT EXISTS market_status ON market(status)");
                     s.execute("CREATE TABLE IF NOT EXISTS project_contrib(project TEXT, uuid TEXT, name TEXT, items INTEGER NOT NULL DEFAULT 0, mana INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(project, uuid))");
                 }
             } catch (SQLException e) {

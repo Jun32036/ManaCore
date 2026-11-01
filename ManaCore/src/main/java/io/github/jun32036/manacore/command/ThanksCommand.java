@@ -27,7 +27,7 @@ public final class ThanksCommand implements TabExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player p)) return true;
         if (args.length < 1) {
-            plugin.menu().openThanks(p);
+            if (plugin.dialogs().enabled()) plugin.dialogs().openThanks(p); else plugin.menu().openThanks(p);
             return true;
         }
         Player t = Bukkit.getPlayerExact(args[0]);

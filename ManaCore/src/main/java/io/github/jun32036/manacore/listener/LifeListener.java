@@ -111,6 +111,7 @@ public final class LifeListener implements Listener {
         if (CROPS.contains(type)) {
             if (!(b.getBlockData() instanceof Ageable a) || a.getAge() < a.getMaximumAge()) return;
             Material produce = b.getBlockData().getPlacementMaterial();
+            extraDrops(p, b, Skill.FARM);
             craft().award(p, Skill.FARM, craft().points("crop", 1), id(produce), "收成" + id(produce));
             dex().discover(p, DexService.Category.CROP, id(produce), name(produce));
             return;
@@ -131,6 +132,7 @@ public final class LifeListener implements Listener {
             return;
         }
         if (isOre(type)) {
+            extraDrops(p, b, Skill.GATHER);
             String ore = EconMath.normalizeOre(id(type));
             craft().award(p, Skill.GATHER, craft().points("ores." + ore, craft().points("ore-default", 1)), ore, "挖到" + ore);
             Material display = Material.matchMaterial(ore);
@@ -141,6 +143,19 @@ public final class LifeListener implements Listener {
             craft().award(p, Skill.GATHER, craft().points("log", 0.5), id(type), "砍樹");
             dex().discover(p, DexService.Category.GATHER, id(type), name(type));
         }
+    }
+
+    /** 被動：有機率把這個方塊的掉落物再掉一份 */
+    private void extraDrops(Player p, Block b, Skill s) {
+        boolean debug = plugin.getConfig().getBoolean("sources.craft.passives.debug", false);
+        boolean hit = plugin.passives().roll(p, s);
+        if (debug) plugin.getLogger().info("[passive] " + p.getName() + " " + s.key + " bonus=" + plugin.passives().bonus(p, s) + " hit=" + hit + " block=" + b.getType());
+        if (!hit) return;
+        var drops = b.getDrops(p.getInventory().getItemInMainHand(), p);
+        if (debug) plugin.getLogger().info("[passive] drops=" + drops);
+        for (ItemStack drop : drops)
+            b.getWorld().dropItemNaturally(b.getLocation().add(0.5, 0.5, 0.5), drop.clone());
+        p.sendActionBar(Component.text("✦ " + s.display + "被動：多拿一份！"));
     }
 
     private static boolean isOre(Material m) {
@@ -282,6 +297,10 @@ public final class LifeListener implements Listener {
                 : TREASURE.contains(m) ? craft().points("treasure", 5)
                 : craft().points("junk", 1);
         craft().award(p, Skill.FISHING, pts, id(m), "釣到" + id(m));
+        if (plugin.passives().roll(p, Skill.FISHING)) {
+            p.getWorld().dropItemNaturally(p.getLocation(), item.getItemStack().clone());
+            p.sendActionBar(Component.text("✦ 釣魚被動：再多一份！"));
+        }
         dex().discover(p, DexService.Category.FISH, id(m), name(m));
     }
 
@@ -294,6 +313,11 @@ public final class LifeListener implements Listener {
         if (!(e.getBreeder() instanceof Player p)) return;
         String type = e.getEntity().getType().getKey().getKey();
         craft().award(p, Skill.HUSBANDRY, craft().points("breed", 3), type, "繁殖" + type);
+        if (plugin.passives().roll(p, Skill.HUSBANDRY)) {
+            Entity twin = e.getEntity().getWorld().spawnEntity(e.getEntity().getLocation(), e.getEntity().getType());
+            if (twin instanceof org.bukkit.entity.Ageable ag) ag.setBaby();
+            p.sendActionBar(Component.text("✦ 畜牧被動：雙胞胎！"));
+        }
         dex().discover(p, DexService.Category.ANIMAL, type, entityName(e.getEntity()));
     }
 
@@ -326,6 +350,11 @@ public final class LifeListener implements Listener {
         Player p = e.getPlayer();
         plugin.mana().touch(p);
         craft().award(p, Skill.COOKING, craft().points("smelt-food", 0.5) * e.getItemAmount(), id(m), "烹煮" + id(m));
+        int extra = plugin.passives().rolls(p, Skill.COOKING, e.getItemAmount(), 8);
+        if (extra > 0) {
+            p.getInventory().addItem(new ItemStack(m, extra)).values().forEach(x -> p.getWorld().dropItemNaturally(p.getLocation(), x));
+            p.sendActionBar(Component.text("✦ 烹飪被動：多做了 " + extra + " 個！"));
+        }
         dex().discover(p, DexService.Category.DISH, id(m), name(m));
     }
 
