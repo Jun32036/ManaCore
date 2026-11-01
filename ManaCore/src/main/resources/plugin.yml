@@ -1,0 +1,39 @@
+name: ManaCore
+version: '${project.version}'
+main: xyz.teacafe.manacore.ManaCorePlugin
+api-version: '26.3'
+description: 生生不息 mana 核心：互動與生活手藝產生 mana、城鎮訂單、委託板、社區工程、歸土、生命之樹
+author: 萊森
+website: mc.teacafe.xyz
+libraries:
+  - org.xerial:sqlite-jdbc:3.54.1.0
+
+commands:
+  mana:
+    description: 查看與使用 mana
+    usage: /mana help
+    permission: manacore.use
+  thanks:
+    description: 感謝另一位玩家（對方獲得 mana）
+    usage: /thanks <玩家> [原因]
+    permission: manacore.use
+  altar:
+    description: 遠端開啟生命祭壇（需權限）
+    usage: /altar
+    permission: manacore.altar.remote
+  manaadmin:
+    description: ManaCore 管理指令
+    usage: /manaadmin help
+    aliases: [madmin]
+    permission: manacore.admin
+
+permissions:
+  manacore.use:
+    description: 一般玩家功能
+    default: true
+  manacore.altar.remote:
+    description: 不必走到祭壇就能開啟兌換介面
+    default: op
+  manacore.admin:
+    description: 管理指令
+    default: op

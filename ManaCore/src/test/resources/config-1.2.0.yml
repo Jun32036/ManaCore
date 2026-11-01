@@ -1,0 +1,191 @@
+# ==========================================================
+#  ManaCore — 「生生不息」mana 核心設定
+#  數值為開服初始值，封閉測試後再調整；改完用 /manaadmin reload
+# ==========================================================
+
+# 「一天」以這個時區的午夜為界：每日上限在此時重置，歸土也在此時執行
+timezone: Asia/Taipei
+
+# 玩家超過這段時間沒有移動、轉頭或說話，視為 AFK，AFK 期間不產生任何 mana
+afk-seconds: 300
+
+# 同一個 IP 的帳號之間：聊天接話、/thanks、作品留言、贈與 都不成立
+block-same-ip: true
+
+# ---------------- mana 來源 ----------------
+sources:
+  # 聊天互動：發言後 window-seconds 內有「其他玩家」接話，發言者得 mana
+  chat:
+    enabled: true
+    window-seconds: 60
+    amount: 1
+    daily-cap: 30
+    # 少於這個字數的訊息不算（擋「1」「.」這種洗頻）
+    min-length: 2
+    # 同一位玩家兩次被計分之間至少間隔幾秒
+    min-interval-seconds: 15
+    # 發言要有幾個「有意義的字」才能被別人接話而得到 mana（去掉標點、符號；全是同一個字或純數字不算）
+    min-length-speaker: 3
+    # 同一對玩家之間每天最多讓對方拿到幾點（要拿滿上限得和好幾個人聊）
+    max-per-pair-day: 5
+    # 洗頻：spam-window-seconds 秒內超過 spam-burst 則，接下來 spam-cooldown-seconds 秒的發言都不算
+    spam-burst: 6
+    spam-window-seconds: 30
+    spam-cooldown-seconds: 60
+
+  # 感謝：被別人 /thanks，同一位感謝者每天只能謝同一人一次
+  thanks:
+    enabled: true
+    amount: 5
+    daily-cap: 25
+    # 每位玩家每天最多能感謝幾個人（防止互謝圈）
+    max-given-per-day: 5
+    # 同一對玩家 7 天內只有前幾天的感謝產生 mana（固定小圈圈天天互謝會失效）
+    max-per-pair-week: 3
+
+  # 帶新手：新手完成引導（第一次兌換 + 作品第一次被留言 + 遊玩滿 N 分鐘），導師與新手各得
+  mentor:
+    enabled: true
+    amount: 10
+    daily-cap: 20
+    # 加入伺服器幾天內、遊玩少於幾分鐘的玩家才算新手
+    newbie-max-days: 7
+    newbie-max-minutes: 180
+    required-playtime-minutes: 60
+
+  # 探索：第一次踏入某個生態域、結構或管理員設定的地標
+  explore:
+    enabled: true
+    daily-cap: 30
+    biome: 3
+    structure: 5
+    landmark: 10
+    # 個別結構的額外設定（未列出的用 structure 的值）
+    structure-overrides:
+      minecraft:ancient_city: 10
+      minecraft:trial_chambers: 8
+      minecraft:end_city: 10
+      minecraft:woodland_mansion: 10
+    # 多久檢查一次玩家位置（tick，20 tick = 1 秒）
+    check-interval-ticks: 100
+
+  # 作品被參觀：訪客在作品半徑內用 /mana comment 留言，作者得 mana
+  works:
+    enabled: true
+    amount: 2
+    daily-cap: 20
+    radius: 32
+    max-works-per-player: 3
+    comment-max-length: 100
+    # 同一位訪客給同一位作者，7 天內只有前幾天的留言產生 mana
+    max-per-pair-week: 3
+    # 選單裡可以直接點的預設留言（不想打字的玩家用）
+    preset-comments:
+      - 好漂亮！
+      - 好有創意
+      - 感覺好溫馨
+      - 細節做得好用心
+      - 下次還想再來
+      - 我也想蓋一個
+
+  # 生產收成：收成成熟作物、釣魚、繁殖動物累積點數，每 points-per-mana 點換 1 mana
+  harvest:
+    enabled: true
+    daily-cap: 15
+    points-per-mana: 16
+    crops: true
+    fishing: true
+    breeding: true
+
+  # 活動參與：由管理員 /manaadmin event 發放，daily-cap 設 0 代表不設上限
+  event:
+    daily-cap: 0
+
+  # 祭品：生命祭壇每季只收少量指定物資，有每日上限
+  offering:
+    enabled: true
+    daily-cap: 10
+    # 物品 ID: 每個給多少 mana（請隨季節更換）
+    items:
+      minecraft:pumpkin: 1
+      minecraft:honey_bottle: 2
+      minecraft:cake: 5
+
+# ---------------- 歸土 ----------------
+decay:
+  enabled: true
+  # 個人持有超過這個數字的部分，每天有 rate 比例歸土，流入生命之樹
+  threshold: 500
+  rate: 0.05
+
+# ---------------- 贈與 ----------------
+gift:
+  enabled: true
+  # 單次贈與上限（0 = 不限）
+  max-per-gift: 0
+
+# ---------------- 生命之樹 ----------------
+# 歸土與捐獻都會讓生命之樹成長；每到一個階段全服解鎖一項祝福
+# commands 由主控台執行，可用 {stage} {name} 佔位
+life-tree:
+  stages:
+    - threshold: 1000
+      name: 新芽
+      commands:
+        - 'say 生命之樹長出了新芽！'
+    - threshold: 3000
+      name: 枝葉
+      commands:
+        - 'say 生命之樹枝葉茂盛，今晚有節慶煙火！'
+    - threshold: 8000
+      name: 開花
+      commands:
+        - 'say 生命之樹開花了，新的公共傳送點已開放！'
+    - threshold: 20000
+      name: 結果
+      commands:
+        - 'say 生命之樹結出果實，全服感謝每一位玩家！'
+
+# ---------------- 生命祭壇（公定價兌換所） ----------------
+# 祭壇只「換出」物資；price 是換一次的 mana，amount 是一次換到的數量
+# slot 是在介面中的位置（0–44），category 只用於顯示
+altar:
+  title: '<dark_green>生命祭壇 · 公定價'
+  items:
+    stone_bricks:   { material: STONE_BRICKS, amount: 64, price: 10, slot: 0,  category: 基礎建材 }
+    oak_log:        { material: OAK_LOG,      amount: 64, price: 12, slot: 1,  category: 基礎建材 }
+    spruce_log:     { material: SPRUCE_LOG,   amount: 64, price: 12, slot: 2,  category: 基礎建材 }
+    glass:          { material: GLASS,        amount: 64, price: 15, slot: 3,  category: 基礎建材 }
+    bricks:         { material: BRICKS,       amount: 64, price: 12, slot: 4,  category: 基礎建材 }
+    wheat_seeds:    { material: WHEAT_SEEDS,  amount: 16, price: 1,  slot: 9,  category: 農作與食物 }
+    oak_sapling:    { material: OAK_SAPLING,  amount: 4,  price: 2,  slot: 10, category: 農作與食物 }
+    bread:          { material: BREAD,        amount: 16, price: 5,  slot: 11, category: 農作與食物 }
+    poppy:          { material: POPPY,        amount: 16, price: 3,  slot: 18, category: 裝飾與染料 }
+    red_dye:        { material: RED_DYE,      amount: 16, price: 4,  slot: 19, category: 裝飾與染料 }
+    white_banner:   { material: WHITE_BANNER, amount: 4,  price: 6,  slot: 20, category: 裝飾與染料 }
+    iron_pickaxe:   { material: IRON_PICKAXE, amount: 1,  price: 15, slot: 27, category: 工具與功能方塊 }
+    furnace:        { material: FURNACE,      amount: 4,  price: 10, slot: 28, category: 工具與功能方塊 }
+    crafting_table: { material: CRAFTING_TABLE, amount: 4, price: 8, slot: 29, category: 工具與功能方塊 }
+
+# ---------------- 訊息（MiniMessage 格式） ----------------
+messages:
+  prefix: '<green>✿ </green>'
+  earned: '<gray>+<green><amount></green> mana <dark_gray>·</dark_gray> <reason></gray>'
+  balance-header: '<green>你的 mana：<white><balance></white></green>'
+  decay-notice: '<gray>持有超過 <threshold> 的部分，每天會有 <rate> 歸土回生命之樹。</gray>'
+  afk: '<yellow>你目前處於 AFK，暫時不會產生 mana。</yellow>'
+  no-player: '<red>找不到玩家 <name>（對方需要在線上）。</red>'
+  same-ip: '<red>同一個網路的帳號之間無法這樣做。</red>'
+  not-enough: '<red>mana 不足：需要 <need>，你有 <have>。</red>'
+  cap-reached: '<gray>今天「<reason>」的 mana 已達上限，明天再來吧。</gray>'
+  thanks-sent: '<green>你感謝了 <name>。</green>'
+  thanks-received: '<green><name> 感謝了你<reason>！</green>'
+  thanks-already: '<gray>你今天已經感謝過 <name> 了。</gray>'
+  thanks-limit: '<gray>你今天已經感謝了 <max> 個人，明天再繼續吧。</gray>'
+  gift-sent: '<green>你送給 <name> <amount> mana。</green>'
+  gift-received: '<green><name> 送給你 <amount> mana<note>。</green>'
+  donated: '<green>你把 <amount> mana 獻給了生命之樹。</green>'
+  tree-stage: '<gold>🌳 生命之樹成長到「<name>」階段！</gold>'
+  bought: '<green>用 <price> mana 換到 <item> ×<amount>。</green>'
+  inventory-full: '<yellow>背包滿了，物品放在你腳邊。</yellow>'
+  decayed: '<gray>今天有 <amount> mana 歸土，流回了生命之樹。</gray>'
