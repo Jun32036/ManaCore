@@ -350,7 +350,7 @@ ICON_BY_NAME = {'生活手藝': 'skills', '圖鑑': 'dex', '城鎮訂單': 'orde
     '感謝': 'thanks', '贈與 mana': 'gift', '委託板': 'board', '我的作品': 'works', '參觀附近作品': 'visit', '收到的留言': 'comments', '導師': 'mentor', '導師邀請': 'mentor',
     '生命之樹': 'tree', '社區工程': 'projects', 'mana 紀錄': 'log', '今天的 mana': 'today', '怎麼得到 mana？': 'help', '關閉': 'close', '返回': 'back', '返回分類': 'back',
     '上一頁': 'prev', '下一頁': 'next', '我的攤位': 'stall', '我的委託': 'mine', '投入物品': 'deposit', '上架主手物品': 'sell', '發布物品委託': 'request',
-    '市集怎麼用？': 'info', '委託板怎麼用？': 'info', '手藝怎麼算？': 'info', '我的圖鑑': 'dex', ' ': 'blank', '全部捐出': 'tree'}
+    '靠自己的雙手': 'hub_self', '和大家一起': 'hub_social', '生生不息': 'hub_life', '市集怎麼用？': 'info', '委託板怎麼用？': 'info', '手藝怎麼算？': 'info', '我的圖鑑': 'dex', ' ': 'blank', '全部捐出': 'tree'}
 def styled_icon(slot, size):
     if not PACK: return None
     if slot['name'] == 'player_head': key = 'mana'
