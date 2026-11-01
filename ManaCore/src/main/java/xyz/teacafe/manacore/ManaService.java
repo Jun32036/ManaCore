@@ -3,6 +3,7 @@ package xyz.teacafe.manacore;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import xyz.teacafe.manacore.economy.Skill;
 
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,6 +59,7 @@ public final class ManaService {
         currentDay = now;
         for (PlayerData d : online.values()) d.resetDaily();
         runDecayIfNeeded();
+        plugin.onNewDay();
     }
 
     // ---------------- 載入 / 卸載 ----------------
@@ -113,9 +115,37 @@ public final class ManaService {
                 ps.setString(2, id);
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
-                        Source s = Source.byKey(rs.getString(1));
+                        String key = rs.getString(1);
+                        if (key.startsWith(DEX_DAILY_PREFIX)) {
+                            d.dexToday.put(key.substring(DEX_DAILY_PREFIX.length()), rs.getLong(2));
+                            continue;
+                        }
+                        if (key.startsWith(SKILL_DAILY_PREFIX)) {
+                            Skill sk = Skill.byKey(key.substring(SKILL_DAILY_PREFIX.length()));
+                            if (sk != null) d.skillToday.put(sk, rs.getLong(2));
+                            continue;
+                        }
+                        Source s = Source.byKey(key);
                         if (s != null) d.earnedToday.put(s, rs.getLong(2));
                     }
+                }
+            }
+            try (PreparedStatement ps = c.prepareStatement("SELECT skill, xp, points FROM crafts WHERE uuid=?")) {
+                ps.setString(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Skill sk = Skill.byKey(rs.getString(1));
+                        if (sk == null) continue;
+                        d.craftXp.put(sk, rs.getDouble(2));
+                        d.craftPoints.put(sk, rs.getDouble(3));
+                    }
+                }
+            }
+            try (PreparedStatement ps = c.prepareStatement("SELECT idx, bundles FROM order_contrib WHERE day=? AND uuid=?")) {
+                ps.setString(1, day);
+                ps.setString(2, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) d.ordersToday.put(rs.getInt(1), rs.getInt(2));
                 }
             }
             try (PreparedStatement ps = c.prepareStatement("SELECT receiver FROM thanks_log WHERE day=? AND giver=?")) {
@@ -149,7 +179,8 @@ public final class ManaService {
     }
 
     public void unload(UUID uuid) {
-        online.remove(uuid);
+        PlayerData d = online.remove(uuid);
+        if (d != null) saveAllCrafts(d);
     }
 
     // ---------------- AFK ----------------
@@ -171,14 +202,18 @@ public final class ManaService {
 
     // ---------------- 產生 mana ----------------
 
-    /** 0 代表不設上限 */
+    /**
+     * 0 代表不設上限。
+     * 不帶預設值呼叫 getLong：伺服器上的舊設定檔沒有這個鍵時，會改讀插件內建 config.yml 的值
+     * （帶了預設值 0 反而會讓 1.3.0 新來源在舊設定檔上變成「不限」）。
+     */
     public long cap(Source s) {
-        return plugin.getConfig().getLong("sources." + s.key + ".daily-cap", 0);
+        return plugin.getConfig().getLong("sources." + s.key + ".daily-cap");
     }
 
     /** 需要玩家「正在玩」才算數的來源 */
     private static boolean needsActive(Source s) {
-        return s == Source.CHAT || s == Source.EXPLORE || s == Source.HARVEST || s == Source.OFFERING;
+        return s == Source.CHAT || s == Source.EXPLORE || s == Source.HARVEST || s == Source.OFFERING || s == Source.CRAFT;
     }
 
     /** 今天這個來源還能拿多少（-1 = 不限） */
@@ -245,6 +280,53 @@ public final class ManaService {
             Database.ledger(c, id, g, s.key, detail);
             return null;
         });
+    }
+
+    /** daily 表中「每種手藝」的紀錄 key 前綴（和來源 key 放在同一張表） */
+    public static final String SKILL_DAILY_PREFIX = "craft:";
+    public static final String DEX_DAILY_PREFIX = "dexcat:";
+
+    /** 記錄圖鑑某分類今天拿到的 mana */
+    public void addDexDaily(PlayerData d, String category, long amount) {
+        if (amount <= 0) return;
+        d.dexToday.merge(category, amount, Long::sum);
+        String id = d.uuid.toString(), day = currentDay, key = DEX_DAILY_PREFIX + category;
+        db.run(c -> {
+            Database.addDaily(c, day, id, key, amount);
+            return null;
+        });
+    }
+
+    /** 記錄某種手藝今天拿到的 mana（總量已經由 earn 記在 craft 來源下） */
+    public void addSkillDaily(PlayerData d, Skill s, long amount) {
+        if (amount <= 0) return;
+        d.skillToday.merge(s, amount, Long::sum);
+        String id = d.uuid.toString(), day = currentDay, key = SKILL_DAILY_PREFIX + s.key;
+        db.run(c -> {
+            Database.addDaily(c, day, id, key, amount);
+            return null;
+        });
+    }
+
+    /** 寫回手藝經驗與點數累積（絕對值） */
+    public void saveCraft(PlayerData d, Skill s) {
+        String id = d.uuid.toString();
+        double xp = d.xp(s), pts = d.craftPoints.getOrDefault(s, 0.0);
+        db.run(c -> {
+            try (PreparedStatement ps = c.prepareStatement(
+                    "INSERT INTO crafts(uuid, skill, xp, points) VALUES(?,?,?,?) ON CONFLICT(uuid, skill) DO UPDATE SET xp=excluded.xp, points=excluded.points")) {
+                ps.setString(1, id);
+                ps.setString(2, s.key);
+                ps.setDouble(3, xp);
+                ps.setDouble(4, pts);
+                ps.executeUpdate();
+            }
+            return null;
+        });
+    }
+
+    public void saveAllCrafts(PlayerData d) {
+        for (Skill s : Skill.values()) if (d.craftXp.containsKey(s) || d.craftPoints.containsKey(s)) saveCraft(d, s);
     }
 
     // ---------------- 花費與轉移 ----------------

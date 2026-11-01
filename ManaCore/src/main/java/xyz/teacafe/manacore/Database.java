@@ -54,6 +54,15 @@ public final class Database {
                     s.execute("CREATE TABLE IF NOT EXISTS landmarks(name TEXT PRIMARY KEY, world TEXT, x REAL, y REAL, z REAL, radius REAL)");
                     s.execute("CREATE TABLE IF NOT EXISTS altars(world TEXT, x INTEGER, y INTEGER, z INTEGER, PRIMARY KEY(world, x, y, z))");
                     s.execute("CREATE TABLE IF NOT EXISTS kv(k TEXT PRIMARY KEY, v TEXT)");
+                    // ---- 1.3.0 經濟系統 ----
+                    s.execute("CREATE TABLE IF NOT EXISTS crafts(uuid TEXT, skill TEXT, xp REAL NOT NULL DEFAULT 0, points REAL NOT NULL DEFAULT 0, PRIMARY KEY(uuid, skill))");
+                    s.execute("CREATE TABLE IF NOT EXISTS order_progress(day TEXT, idx INTEGER, delivered INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day, idx))");
+                    s.execute("CREATE TABLE IF NOT EXISTS order_contrib(day TEXT, idx INTEGER, uuid TEXT, bundles INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(day, idx, uuid))");
+                    s.execute("CREATE TABLE IF NOT EXISTS commissions(id INTEGER PRIMARY KEY AUTOINCREMENT, created INTEGER, poster TEXT, poster_name TEXT, poster_ip TEXT, kind TEXT, material TEXT, amount INTEGER, reward INTEGER, note TEXT, status TEXT, taker TEXT, taker_name TEXT, items BLOB, claimed INTEGER NOT NULL DEFAULT 1, finished INTEGER)");
+                    s.execute("CREATE INDEX IF NOT EXISTS commissions_status ON commissions(status)");
+                    s.execute("CREATE TABLE IF NOT EXISTS project_state(project TEXT PRIMARY KEY, status TEXT, mana INTEGER NOT NULL DEFAULT 0, finished INTEGER)");
+                    s.execute("CREATE TABLE IF NOT EXISTS project_needs(project TEXT, material TEXT, have INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(project, material))");
+                    s.execute("CREATE TABLE IF NOT EXISTS project_contrib(project TEXT, uuid TEXT, name TEXT, items INTEGER NOT NULL DEFAULT 0, mana INTEGER NOT NULL DEFAULT 0, PRIMARY KEY(project, uuid))");
                 }
             } catch (SQLException e) {
                 throw new RuntimeException(e);

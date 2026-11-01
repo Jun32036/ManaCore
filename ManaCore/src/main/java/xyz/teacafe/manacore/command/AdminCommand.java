@@ -24,7 +24,7 @@ import java.util.List;
 /** /manaadmin 管理指令 */
 public final class AdminCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("help", "give", "take", "event", "check", "altar", "landmark", "tree", "decay", "reload");
+    private static final List<String> SUBS = List.of("help", "give", "take", "event", "check", "altar", "landmark", "tree", "decay", "orders", "project", "reload");
 
     private final ManaCorePlugin plugin;
 
@@ -43,6 +43,18 @@ public final class AdminCommand implements TabExecutor {
             case "altar" -> altar(s, a);
             case "landmark" -> landmark(s, a);
             case "tree" -> tree(s, a);
+            case "orders" -> {
+                if (a.length > 0 && a[0].equalsIgnoreCase("reroll")) {
+                    plugin.orders().loadToday(true);
+                    s.sendMessage(Msg.mm("<green>已重新抽選今天的城鎮訂單（今天的交貨進度已清除）。</green>"));
+                } else {
+                    s.sendMessage(Msg.mm("<green>── 今天的城鎮訂單 ──</green>"));
+                    for (var o : plugin.orders().today())
+                        s.sendMessage(Msg.mm("<white><i>.</white> <id> <gray><n>/<b> 份</gray>", "i", o.idx + 1, "id", o.def.id(), "n", o.delivered, "b", o.def.bundles()));
+                    s.sendMessage(Msg.mm("<gray>/manaadmin orders reroll 重新抽選</gray>"));
+                }
+            }
+            case "project" -> project(s, a);
             case "decay" -> {
                 plugin.mana().forceDecay();
                 s.sendMessage(Msg.mm("<green>已手動執行一次歸土（不影響每日自動歸土）。</green>"));
@@ -66,6 +78,8 @@ public final class AdminCommand implements TabExecutor {
                 "<white>landmark add <名稱> <半徑> | remove <名稱> | list</white> <gray>探索地標</gray>",
                 "<white>tree [set <數值>]</white> <gray>生命之樹</gray>",
                 "<white>decay</white> <gray>立刻執行一次歸土（測試用）</gray>",
+                "<white>orders [reroll]</white> <gray>查看 / 重新抽選今天的城鎮訂單</gray>",
+                "<white>project list | reset <id></white> <gray>社區工程（內容在 config.yml 的 projects）</gray>",
                 "<white>reload</white> <gray>重新讀取 config.yml</gray>"
         };
         for (String l : lines) s.sendMessage(Msg.mm(l));
@@ -197,6 +211,17 @@ public final class AdminCommand implements TabExecutor {
         s.sendMessage(Msg.mm("<green>生命之樹：<total>，已解鎖 <r>/<all> 階段</green>", "total", t.total(), "r", t.reached(), "all", t.stages().size()));
     }
 
+    private void project(CommandSender s, String[] a) {
+        if (a.length >= 2 && a[0].equalsIgnoreCase("reset")) {
+            s.sendMessage(Msg.mm(plugin.projects().reset(a[1]) ? "<green>已重置工程 <id> 的進度。</green>" : "<red>沒有這項工程：<id></red>", "id", a[1]));
+            return;
+        }
+        s.sendMessage(Msg.mm("<green>── 社區工程 ──</green>"));
+        for (var pr : plugin.projects().all())
+            s.sendMessage(Msg.mm("<white><id></white> <gray><n> <p>%<d></gray>", "id", pr.id, "n", pr.name,
+                    "p", Math.round(pr.progress() * 100), "d", pr.done ? " 已完工" : ""));
+    }
+
     private static long parse(String s) {
         try {
             return Long.parseLong(s);
@@ -220,9 +245,13 @@ public final class AdminCommand implements TabExecutor {
                 case "altar" -> ManaCommand.filter(List.of("set", "remove"), args[1]);
                 case "landmark" -> ManaCommand.filter(List.of("add", "remove", "list"), args[1]);
                 case "tree" -> ManaCommand.filter(List.of("set"), args[1]);
+                case "orders" -> ManaCommand.filter(List.of("reroll"), args[1]);
+                case "project" -> ManaCommand.filter(List.of("list", "reset"), args[1]);
                 default -> List.of();
             };
         }
+        if (args.length == 3 && sub.equals("project") && args[1].equalsIgnoreCase("reset"))
+            return ManaCommand.filter(plugin.projects().all().stream().map(pr -> pr.id).toList(), args[2]);
         if (args.length == 3 && sub.equals("landmark") && args[1].equalsIgnoreCase("remove"))
             return ManaCommand.filter(plugin.places().landmarks().stream().map(Places.Landmark::name).toList(), args[2]);
         return List.of();

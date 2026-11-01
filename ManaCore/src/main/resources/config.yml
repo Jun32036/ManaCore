@@ -88,14 +88,209 @@ sources:
       - 下次還想再來
       - 我也想蓋一個
 
-  # 生產收成：收成成熟作物、釣魚、繁殖動物累積點數，每 points-per-mana 點換 1 mana
+  # 生產收成（1.2.0 以前）：1.3.0 起由下面的「生活手藝」取代，這段保留只為相容舊紀錄
   harvest:
+    enabled: false
+    daily-cap: 0
+
+  # ======================================================
+  #  1.3.0 經濟系統
+  #  核心想法：每個動作都有意義、有價值，但「刷」同一件事沒有意義。
+  #  - 獨自玩：生活手藝（小額、換著玩最划算）＋ 圖鑑（嘗試新東西）＋ 城鎮訂單（主要收入，需求每天輪替）
+  #  - 一起玩：委託板、結伴加成、合作挑戰、社區工程（人越多越划算）
+  # ======================================================
+
+  # 生活手藝：採集、種植、畜牧、釣魚、烹飪、建造
+  # 每次動作點數 = 基礎點數 × 多樣性 × 結伴加成 × 新鮮度；每 points-per-mana 點換 1 mana
+  craft:
+    enabled: true
+    # 所有手藝合計的每日上限
+    daily-cap: 30
+    # 單一手藝每日上限（想拿滿 daily-cap，至少要玩 3 種手藝）
+    per-skill-cap: 10
+    points-per-mana: 10
+    # 新鮮度：每得到 1 點下降 decay-per-point，最低到 floor；每分鐘恢復 recover-per-minute
+    # （預設：同一手藝連續拿約 14 mana 後效率降到三成，休息約 70 分鐘完全恢復）
+    freshness:
+      decay-per-point: 0.005
+      floor: 0.3
+      recover-per-minute: 0.01
+    # 多樣性：看最近 window 次動作裡有幾種不同的東西；係數 = base + per-distinct × 種類數（最多 1.0）
+    # 只種小麥 = 0.625；種 4 種作物以上 = 1.0
+    variety:
+      window: 32
+      base: 0.5
+      per-distinct: 0.125
+    # 結伴：radius 格內有其他非 AFK、不同網路的玩家時，點數加成 bonus
+    companion:
+      radius: 32
+      bonus: 0.25
+    # 等級門檻（Lv1 到 Lv10 需要的經驗）與稱號；經驗 = 有效點數，訂單交貨也會給經驗
+    levels: [0, 40, 120, 260, 480, 800, 1250, 1850, 2600, 3500]
+    titles: [見習, 入門, 熟練, 老手, 匠人, 名匠, 大師, 宗師, 傳說, 生生不息]
+    # 基礎點數
+    points:
+      crop: 1              # 成熟作物（小麥、胡蘿蔔、馬鈴薯、甜菜根、地獄疙瘩、可可豆…）
+      melon-pumpkin: 1
+      cane-cactus: 0.5
+      bamboo: 0.25
+      berry: 1             # 右鍵採收甜漿果、發光漿果
+      ore-default: 1
+      ores:
+        coal_ore: 1
+        copper_ore: 1
+        iron_ore: 1.5
+        gold_ore: 2
+        nether_gold_ore: 1
+        nether_quartz_ore: 1
+        redstone_ore: 1.5
+        lapis_ore: 2
+        diamond_ore: 5
+        emerald_ore: 5
+        ancient_debris: 8
+        amethyst_cluster: 1
+      log: 0.5             # 原木（玩家自己放的不算）
+      fish: 3
+      treasure: 5          # 命名牌、鸚鵡螺殼、附魔書…
+      junk: 1
+      breed: 3
+      shear: 1
+      tame: 5
+      smelt-food: 0.5      # 從熔爐 / 煙燻爐拿出的每一個熟食
+      dish-default: 1      # 合成一次料理
+      dishes:
+        cake: 4
+        pumpkin_pie: 2
+        rabbit_stew: 3
+        mushroom_stew: 2
+        beetroot_soup: 2
+        suspicious_stew: 2
+        golden_carrot: 1.5
+        cookie: 1.5
+        bread: 1
+      build-block: 0.25    # 放一個實心方塊（10 分鐘內自己拆掉會收回）
+
+  # 圖鑑：第一次釣到、種出、做出、繁殖、馴服、討伐、合成某樣東西時的一次性 mana
+  dex:
+    enabled: true
+    daily-cap: 30
+    amounts:
+      fish: 2
+      crop: 2
+      animal: 3
+      tame: 5
+      dish: 2
+      gather: 2
+      craft: 1
+      boss: 10
+    # 個別分類的每日上限（0 = 只受 daily-cap 限制）。合成很便宜（各種木材製品），所以限制較嚴
+    category-daily-cap:
+      craft: 5
+    # 每個分類每收集滿 milestone-every 種，再給 milestone-bonus（「合成」分類沒有里程碑）
+    milestone-every: 10
+    milestone-bonus: 5
+
+  # 城鎮訂單：每天依日期抽出 daily-count 張「城鎮需要的東西」
+  # 每張全服共同完成 bundles 份、每人每天最多 per-player 份；交滿時每位出力者再得 completion-bonus
+  order:
+    enabled: true
+    daily-cap: 40
+    daily-count: 6
+    # 同一種手藝每天最多幾張（讓需求分散到不同玩法）
+    max-per-skill: 2
+    default-bundles: 10
+    default-per-player: 2
+    completion-bonus: 3
+    # 交一份訂單得到的手藝經驗 = reward × xp-per-reward
+    xp-per-reward: 2
+    # item：物品 ID；amount：每份數量；reward：每份 mana；skill：gather/farm/husbandry/fishing/cooking/build
+    # level：需要該手藝幾級（預設 1）；bundles、per-player 可個別覆寫
+    pool:
+      bread:           { item: BREAD,           amount: 16, reward: 4, skill: cooking }
+      baked_potato:    { item: BAKED_POTATO,    amount: 32, reward: 4, skill: cooking }
+      cooked_salmon:   { item: COOKED_SALMON,   amount: 16, reward: 5, skill: cooking }
+      cookie:          { item: COOKIE,          amount: 32, reward: 4, skill: cooking }
+      mushroom_stew:   { item: MUSHROOM_STEW,   amount: 4,  reward: 4, skill: cooking }
+      pumpkin_pie:     { item: PUMPKIN_PIE,     amount: 8,  reward: 6, skill: cooking, level: 2 }
+      cake:            { item: CAKE,            amount: 2,  reward: 6, skill: cooking, level: 2 }
+      golden_carrot:   { item: GOLDEN_CARROT,   amount: 8,  reward: 8, skill: cooking, level: 3, bundles: 6 }
+      rabbit_stew:     { item: RABBIT_STEW,     amount: 3,  reward: 8, skill: cooking, level: 3, bundles: 6 }
+      cod:             { item: COD,             amount: 16, reward: 4, skill: fishing }
+      salmon:          { item: SALMON,          amount: 12, reward: 4, skill: fishing }
+      tropical_fish:   { item: TROPICAL_FISH,   amount: 4,  reward: 5, skill: fishing }
+      pufferfish:      { item: PUFFERFISH,      amount: 3,  reward: 5, skill: fishing, level: 2 }
+      nautilus_shell:  { item: NAUTILUS_SHELL,  amount: 1,  reward: 8, skill: fishing, level: 3, bundles: 4, per-player: 1 }
+      wheat:           { item: WHEAT,           amount: 64, reward: 3, skill: farm }
+      carrot:          { item: CARROT,          amount: 64, reward: 3, skill: farm }
+      potato:          { item: POTATO,          amount: 64, reward: 3, skill: farm }
+      beetroot:        { item: BEETROOT,        amount: 32, reward: 3, skill: farm }
+      pumpkin:         { item: PUMPKIN,         amount: 16, reward: 4, skill: farm }
+      melon_slice:     { item: MELON_SLICE,     amount: 64, reward: 3, skill: farm }
+      sugar_cane:      { item: SUGAR_CANE,      amount: 64, reward: 3, skill: farm }
+      sweet_berries:   { item: SWEET_BERRIES,   amount: 32, reward: 3, skill: farm }
+      cocoa_beans:     { item: COCOA_BEANS,     amount: 32, reward: 4, skill: farm, level: 2 }
+      nether_wart:     { item: NETHER_WART,     amount: 32, reward: 5, skill: farm, level: 3 }
+      white_wool:      { item: WHITE_WOOL,      amount: 32, reward: 4, skill: husbandry }
+      leather:         { item: LEATHER,         amount: 12, reward: 4, skill: husbandry }
+      egg:             { item: EGG,             amount: 16, reward: 3, skill: husbandry }
+      feather:         { item: FEATHER,         amount: 24, reward: 3, skill: husbandry }
+      honey_bottle:    { item: HONEY_BOTTLE,    amount: 4,  reward: 5, skill: husbandry, level: 2 }
+      rabbit_hide:     { item: RABBIT_HIDE,     amount: 8,  reward: 5, skill: husbandry, level: 2 }
+      coal:            { item: COAL,            amount: 32, reward: 3, skill: gather }
+      raw_iron:        { item: RAW_IRON,        amount: 24, reward: 4, skill: gather }
+      raw_copper:      { item: RAW_COPPER,      amount: 48, reward: 3, skill: gather }
+      redstone:        { item: REDSTONE,        amount: 32, reward: 4, skill: gather }
+      lapis_lazuli:    { item: LAPIS_LAZULI,    amount: 24, reward: 4, skill: gather }
+      amethyst_shard:  { item: AMETHYST_SHARD,  amount: 16, reward: 4, skill: gather }
+      oak_log:         { item: OAK_LOG,         amount: 64, reward: 3, skill: gather }
+      spruce_log:      { item: SPRUCE_LOG,      amount: 64, reward: 3, skill: gather }
+      birch_log:       { item: BIRCH_LOG,       amount: 64, reward: 3, skill: gather }
+      quartz:          { item: QUARTZ,          amount: 32, reward: 5, skill: gather, level: 2 }
+      diamond:         { item: DIAMOND,         amount: 2,  reward: 8, skill: gather, level: 4, bundles: 5, per-player: 1 }
+      stone_bricks:    { item: STONE_BRICKS,    amount: 64, reward: 4, skill: build }
+      bricks:          { item: BRICKS,          amount: 64, reward: 5, skill: build }
+      glass:           { item: GLASS,           amount: 64, reward: 4, skill: build }
+      smooth_stone:    { item: SMOOTH_STONE,    amount: 64, reward: 4, skill: build }
+      terracotta:      { item: TERRACOTTA,      amount: 64, reward: 4, skill: build }
+      lantern:         { item: LANTERN,         amount: 8,  reward: 5, skill: build, level: 2 }
+      bookshelf:       { item: BOOKSHELF,       amount: 4,  reward: 6, skill: build, level: 3 }
+
+  # 助人委託：完成別人在委託板的委託時，世界額外回報的 mana（酬謝本身由發布者支付）
+  help:
     enabled: true
     daily-cap: 15
-    points-per-mana: 16
-    crops: true
-    fishing: true
-    breeding: true
+    amount: 3
+    # 酬謝至少這麼多才有額外回報（避免互發 1 點的委託刷 mana）
+    min-reward: 5
+    # 同一對玩家 7 天內最多幾次有額外回報
+    max-per-pair-week: 3
+
+  # 合作挑戰：擊敗首領或打贏突襲，出力與在場的玩家都有獎勵；人越多每人越多
+  challenge:
+    enabled: true
+    daily-cap: 60
+    # 每人得到 = 基礎 × (1 + per-extra × 隊友數)，隊友最多算 max-extra 位
+    per-extra: 0.25
+    max-extra: 3
+    # 同一種挑戰每人每天只算一次（蓋農場重複刷沒有意義）
+    once-per-day: true
+    # 出手後多久內首領死亡仍算參與（秒）
+    window-seconds: 300
+    # 首領死亡時，參與者身邊這個半徑內的玩家也算在場支援
+    support-radius: 48
+    raid: 15
+    bosses:
+      ender_dragon: 30
+      wither: 25
+      warden: 25
+      elder_guardian: 10
+
+  # 社區工程：捐物資換 mana 的每日上限（投入 mana 不受影響）；內容在最下面的 projects
+  project:
+    enabled: true
+    daily-cap: 20
+    items-per-mana: 32
+    completion-bonus: 10
 
   # 活動參與：由管理員 /manaadmin event 發放，daily-cap 設 0 代表不設上限
   event:
@@ -117,6 +312,25 @@ decay:
   # 個人持有超過這個數字的部分，每天有 rate 比例歸土，流入生命之樹
   threshold: 500
   rate: 0.05
+
+# ---------------- 委託板 ----------------
+commissions:
+  enabled: true
+  # 酬謝只能從這幾個數字中選（不講價、不比價）
+  reward-tiers: [2, 5, 10, 20, 50]
+  # 手續費比例（流入生命之樹），無條件進位，至少 min-fee
+  fee-rate: 0.1
+  min-fee: 1
+  max-open-per-player: 3
+  # 物品委託最多徵求幾個（576 = 9 組）
+  max-item-amount: 576
+  # 超過幾天沒完成就自動取消並退回酬謝
+  expire-days: 7
+
+# ---------------- 原版的平行貨幣 ----------------
+vanilla:
+  # false = 禁止玩家和村民 / 流浪商人交易（綠寶石會繞過 mana 經濟）；管理員不受限
+  villager-trading: true
 
 # ---------------- 贈與 ----------------
 gift:
@@ -166,6 +380,12 @@ altar:
     iron_pickaxe:   { material: IRON_PICKAXE, amount: 1,  price: 15, slot: 27, category: 工具與功能方塊 }
     furnace:        { material: FURNACE,      amount: 4,  price: 10, slot: 28, category: 工具與功能方塊 }
     crafting_table: { material: CRAFTING_TABLE, amount: 4, price: 8, slot: 29, category: 工具與功能方塊 }
+    lantern:        { material: LANTERN,      amount: 8,  price: 8,  slot: 21, category: 裝飾與染料 }
+    flower_pot:     { material: FLOWER_POT,   amount: 8,  price: 4,  slot: 22, category: 裝飾與染料 }
+    name_tag:       { material: NAME_TAG,     amount: 1,  price: 20, slot: 36, category: 特別物品 }
+    saddle:         { material: SADDLE,       amount: 1,  price: 15, slot: 37, category: 特別物品 }
+    firework:       { material: FIREWORK_ROCKET, amount: 16, price: 10, slot: 38, category: 特別物品 }
+    music_disc:     { material: MUSIC_DISC_CAT, amount: 1, price: 40, slot: 39, category: 特別物品 }
 
 # ---------------- 訊息（MiniMessage 格式） ----------------
 messages:
@@ -189,3 +409,32 @@ messages:
   bought: '<green>用 <price> mana 換到 <item> ×<amount>。</green>'
   inventory-full: '<yellow>背包滿了，物品放在你腳邊。</yellow>'
   decayed: '<gray>今天有 <amount> mana 歸土，流回了生命之樹。</gray>'
+
+# ---------------- 社區工程 ----------------
+# 全服一起蓋的公共建設。needs：物品 ID: 數量（或 { amount: 數量, items-per-mana: 幾個換 1 mana }）
+# mana-goal：需要投入多少 mana；on-complete：完工時由主控台執行的指令（{name} = 工程名稱）
+# 完工後要開新的工程：在這裡新增一項並 /manaadmin reload
+projects:
+  stone_bridge:
+    name: 跨河石橋
+    description: 連接主城與東岸農地的石橋，完工後開放公共傳送點
+    icon: STONE_BRICKS
+    needs:
+      STONE_BRICKS: 1280
+      OAK_LOG: 256
+      LANTERN: { amount: 32, items-per-mana: 4 }
+    mana-goal: 500
+    on-complete:
+      - 'say 跨河石橋完工了！謝謝每一位出力的人。'
+  harvest_festival:
+    name: 豐收祭市集
+    description: 大家一起準備的節慶市集，完工當晚舉辦煙火大會
+    icon: HAY_BLOCK
+    needs:
+      HAY_BLOCK: 192
+      PUMPKIN_PIE: { amount: 128, items-per-mana: 8 }
+      COOKED_SALMON: { amount: 128, items-per-mana: 8 }
+      WHITE_WOOL: 192
+    mana-goal: 300
+    on-complete:
+      - 'say 豐收祭市集完工！今晚在主城廣場有煙火大會。'

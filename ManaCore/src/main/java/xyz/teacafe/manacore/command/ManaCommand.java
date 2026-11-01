@@ -27,7 +27,8 @@ import java.util.UUID;
 /** /mana 玩家指令 */
 public final class ManaCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("help", "status", "give", "donate", "tree", "work", "comment", "comments", "mentor", "log");
+    private static final List<String> SUBS = List.of("help", "status", "skills", "dex", "orders", "board", "request", "projects",
+            "give", "donate", "tree", "work", "comment", "comments", "mentor", "log");
 
     private final ManaCorePlugin plugin;
 
@@ -59,6 +60,12 @@ public final class ManaCommand implements TabExecutor {
             case "comments" -> comments(p);
             case "mentor" -> mentor(p, rest);
             case "log" -> log(p);
+            case "skills", "skill", "craft" -> plugin.econMenu().openSkills(p);
+            case "dex", "collection" -> plugin.econMenu().openDex(p);
+            case "orders", "order" -> plugin.econMenu().openOrders(p);
+            case "board", "commissions" -> plugin.econMenu().openBoard(p);
+            case "request" -> request(p, rest);
+            case "projects", "project" -> plugin.econMenu().openProjects(p);
             default -> help(p);
         }
         return true;
@@ -93,6 +100,13 @@ public final class ManaCommand implements TabExecutor {
                 "<green>── 生生不息 · mana ──</green>",
                 "<white>/mana</white> <gray>打開 mana 選單（大部分功能都能用點的）</gray>",
                 "<white>/mana status</white> <gray>用文字顯示 mana 與今天的進度</gray>",
+                "<white>/mana skills</white> <gray>生活手藝：等級、新鮮度、今天的收入</gray>",
+                "<white>/mana dex</white> <gray>圖鑑：第一次做到的事都有 mana</gray>",
+                "<white>/mana orders</white> <gray>城鎮訂單：交出今天城鎮需要的東西</gray>",
+                "<white>/mana board</white> <gray>委託板：求助與幫忙</gray>",
+                "<white>/mana request <數量> <酬謝></white> <gray>徵求手上拿的物品</gray>",
+                "<white>/mana request service <酬謝> <說明></white> <gray>請人幫忙做一件事</gray>",
+                "<white>/mana projects</white> <gray>社區工程：一起蓋公共建設</gray>",
                 "<white>/thanks <玩家> [原因]</white> <gray>感謝別人，對方會得到 mana</gray>",
                 "<white>/mana give <玩家> <數量> [留言]</white> <gray>把 mana 送給別人</gray>",
                 "<white>/mana donate <數量></white> <gray>獻給生命之樹，讓全服一起成長</gray>",
@@ -103,7 +117,7 @@ public final class ManaCommand implements TabExecutor {
                 "<white>/mana comments</white> <gray>看你的作品收到的留言</gray>",
                 "<white>/mana mentor <新手> | accept | status</white> <gray>導師制度</gray>",
                 "<white>/mana log</white> <gray>最近 10 筆 mana 紀錄</gray>",
-                "<gray>聊天有人接話、探索新地方、收成、參加活動，都會產生 mana。</gray>"
+                "<gray>做同一件事越久收益越少，換著玩、和大家一起玩最划算。</gray>"
         };
         for (String l : lines) p.sendMessage(Msg.mm(l));
     }
@@ -276,6 +290,27 @@ public final class ManaCommand implements TabExecutor {
         plugin.msg().raw(newbie, "<green><n> 想當你的導師，帶你認識這個世界！輸入 <white>/mana mentor accept</white> 接受。</green>", "n", p.getName());
     }
 
+    // ---------------- 委託 ----------------
+
+    private void request(Player p, String[] a) {
+        var cs = plugin.commissions();
+        if (a.length >= 3 && a[0].equalsIgnoreCase("service")) {
+            long reward = parsePositive(p, a[1]);
+            if (reward <= 0) return;
+            cs.postService(p, reward, String.join(" ", Arrays.copyOfRange(a, 2, a.length)));
+            return;
+        }
+        if (a.length >= 2) {
+            long amount = parsePositive(p, a[0]);
+            long reward = amount > 0 ? parsePositive(p, a[1]) : -1;
+            if (amount <= 0 || reward <= 0) return;
+            cs.postItem(p, p.getInventory().getItemInMainHand().getType(), (int) Math.min(Integer.MAX_VALUE, amount), reward);
+            return;
+        }
+        plugin.msg().raw(p, "<gray>用法：手拿物品輸入 <white>/mana request <數量> <酬謝></white>，或 <white>/mana request service <酬謝> <說明></white></gray>");
+        plugin.msg().raw(p, "<gray>酬謝可選：<t></gray>", "t", cs.rewardTiers().toString());
+    }
+
     // ---------------- 紀錄 ----------------
 
     private void log(Player p) {
@@ -339,8 +374,13 @@ public final class ManaCommand implements TabExecutor {
                 }
                 case "work" -> filter(List.of("set", "list", "remove"), args[1]);
                 case "donate" -> filter(List.of("all", "10", "50"), args[1]);
+                case "request" -> filter(List.of("service", "1", "16", "32", "64"), args[1]);
                 default -> List.of();
             };
+        }
+        if (args.length == 3 && sub.equals("request")) {
+            List<String> tiers = plugin.commissions().rewardTiers().stream().map(String::valueOf).toList();
+            return filter(tiers, args[2]);
         }
         return List.of();
     }

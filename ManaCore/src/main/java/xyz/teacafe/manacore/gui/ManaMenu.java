@@ -67,7 +67,8 @@ public final class ManaMenu {
     public void openMain(Player p) {
         PlayerData d = data(p);
         if (d == null) return;
-        Menu m = new Menu(5, "<dark_green>✿ 生生不息 · mana");
+        Menu m = new Menu(6, "<dark_green>✿ 生生不息 · mana");
+        EconomyMenu em = plugin.econMenu();
 
         // 頭像：餘額與歸土
         long threshold = plugin.getConfig().getLong("decay.threshold", 500);
@@ -80,10 +81,12 @@ public final class ManaMenu {
             if (d.balance > threshold)
                 headLore.add("<yellow>明天約會歸土 " + (long) Math.ceil((d.balance - threshold) * rate) + " mana");
         }
+        int companions = plugin.coop().companions(p);
+        if (companions > 0) headLore.add("<green>身邊有 " + companions + " 位夥伴：生活手藝加成中");
         if (plugin.mana().isAfk(d)) headLore.add("<red>你目前 AFK，暫時不會產生 mana");
         m.set(4, head(p, "<light_purple>你的 mana：<white>" + d.balance, headLore));
 
-        // 今日進度
+        // ---- 第一列：靠自己的雙手（採集、種植、畜牧、釣魚、烹飪、建造） ----
         List<String> today = new ArrayList<>();
         for (Source s : Source.values()) {
             if (!s.earning) continue;
@@ -95,7 +98,77 @@ public final class ManaMenu {
         today.add("<dark_gray>每天午夜重置");
         m.set(10, icon(Material.CLOCK, 1, "<gold>今天的 mana", today), e -> {});
 
-        // 生命之樹
+        m.set(11, icon(Material.IRON_HOE, 1, "<green>生活手藝",
+                List.of("<gray>採集、種植、畜牧、釣魚、烹飪、建造", "<gray>等級、新鮮度、今天的收入", "", "<yellow>點一下查看")),
+                e -> { click(p); em.openSkills(p); });
+
+        int dexTotal = 0;
+        for (xyz.teacafe.manacore.economy.DexService.Category c : xyz.teacafe.manacore.economy.DexService.Category.values())
+            dexTotal += plugin.dex().count(d, c);
+        m.set(12, icon(Material.BOOK, 1, "<aqua>圖鑑",
+                List.of("<gray>第一次釣到、種出、做出、繁殖的東西", "<gray>都會得到 mana（只算一次）", "<gray>已登錄 <white>" + dexTotal + "</white> 種", "", "<yellow>點一下查看")),
+                e -> { click(p); em.openDex(p); });
+
+        int open = 0;
+        for (var o : plugin.orders().today()) if (!o.complete()) open++;
+        m.set(13, icon(Material.BELL, 1, "<gold>城鎮訂單",
+                List.of("<gray>城鎮今天需要的東西，交貨換 mana", "<gray>今天還有 <white>" + open + "</white> 張訂單等人完成", "", "<yellow>點一下查看")),
+                e -> { click(p); em.openOrders(p); });
+
+        int boardN = plugin.commissions().board().size(), unclaimed = plugin.commissions().unclaimed(p.getUniqueId());
+        m.set(14, icon(Material.OAK_HANGING_SIGN, 1, "<aqua>委託板",
+                List.of("<gray>需要幫忙？想幫別人？", "<gray>目前有 <white>" + boardN + "</white> 張委託",
+                        unclaimed > 0 ? "<yellow>有 " + unclaimed + " 張委託物品待領取！" : "", "<yellow>點一下查看")),
+                e -> { click(p); em.openBoard(p); });
+
+        m.set(15, icon(Material.SCAFFOLDING, 1, "<gold>社區工程",
+                List.of("<gray>全服一起蓋的公共建設", "<gray>捐物資、投入 mana，完工一起慶祝", "", "<yellow>點一下查看")),
+                e -> { click(p); em.openProjects(p); });
+
+        boolean remote = p.hasPermission("manacore.altar.remote");
+        m.set(16, icon(Material.LODESTONE, 1, "<aqua>生命祭壇",
+                List.of("<gray>用 mana 照公定價換物資", "",
+                        remote ? "<yellow>點一下：開啟兌換介面" : "<gray>請到祭壇方塊旁<white>右鍵</white>開啟")),
+                e -> {
+                    click(p);
+                    if (remote) plugin.altar().open(p);
+                    else { p.closeInventory(); plugin.msg().raw(p, "<gray>生命祭壇要親自走到祭壇方塊旁，右鍵開啟。</gray>"); }
+                });
+
+        // ---- 第二列：人與人 ----
+        int maxThanks = act().thanksPerDay();
+        int left = maxThanks <= 0 ? 99 : Math.max(0, maxThanks - d.thankedToday.size());
+        m.set(19, icon(Material.POPPY, 1, "<red>感謝",
+                List.of("<gray>感謝幫過你的人，對方得到 mana", "<gray>不會花你自己的 mana",
+                        "<gray>今天還能感謝 <white>" + (maxThanks <= 0 ? "不限" : left + " 人"), "", "<yellow>點一下：選擇玩家")),
+                e -> { click(p); openThanks(p); });
+
+        m.set(20, icon(Material.AMETHYST_SHARD, 1, "<light_purple>贈與 mana",
+                List.of("<gray>把自己的 mana 送給別人", "", "<yellow>點一下：選擇玩家")),
+                e -> { click(p); openGift(p); });
+
+        List<Places.Work> mine = plugin.places().worksOf(p.getUniqueId());
+        m.set(21, icon(Material.PAINTING, 1, "<gold>我的作品",
+                List.of("<gray>登記作品，別人來參觀留言時你會得到 mana",
+                        "<gray>已登記 <white>" + mine.size() + "/" + act().maxWorks(), "", "<yellow>點一下：管理作品")),
+                e -> { click(p); openWorks(p); });
+
+        int nearby = plugin.places().worksNear(p.getLocation(), act().worksRadius(), p.getUniqueId()).size();
+        m.set(22, icon(Material.SPYGLASS, 1, "<aqua>參觀附近作品",
+                List.of("<gray>給附近的作品留言，作者會得到 mana",
+                        "<gray>附近 " + (int) act().worksRadius() + " 格內有 <white>" + nearby + "</white> 件作品", "", "<yellow>點一下：選擇作品")),
+                e -> { click(p); openVisit(p); });
+
+        m.set(23, icon(Material.BOOK, 1, "<white>收到的留言", List.of("<gray>讀取中…")), e -> { click(p); openComments(p); });
+        act().unseenComments(p.getUniqueId()).thenAccept(n -> plugin.sync(() -> {
+            if (!m.isOpenFor(p)) return;
+            m.set(23, icon(n > 0 ? Material.ENCHANTED_BOOK : Material.BOOK, Math.max(1, n), "<white>收到的留言",
+                    List.of(n > 0 ? "<yellow>有 " + n + " 則新留言！" : "<gray>沒有新留言", "", "<yellow>點一下查看")),
+                    e -> { click(p); openComments(p); });
+        }));
+
+        mentorButton(m, p, 24);
+
         LifeTree t = plugin.tree();
         LifeTree.Stage cur = t.currentStage(), next = t.nextStage();
         List<String> treeLore = new ArrayList<>();
@@ -106,75 +179,28 @@ public final class ManaMenu {
         } else treeLore.add("<gold>所有祝福都已解鎖");
         treeLore.add("");
         treeLore.add("<yellow>點一下：捐獻 mana");
-        m.set(12, icon(Material.FLOWERING_AZALEA, 1, "<green>生命之樹", treeLore), e -> { click(p); openTree(p); });
+        m.set(25, icon(Material.FLOWERING_AZALEA, 1, "<green>生命之樹", treeLore), e -> { click(p); openTree(p); });
 
-        // 生命祭壇
-        boolean remote = p.hasPermission("manacore.altar.remote");
-        m.set(14, icon(Material.LODESTONE, 1, "<aqua>生命祭壇",
-                List.of("<gray>用 mana 照公定價換物資", "",
-                        remote ? "<yellow>點一下：開啟兌換介面" : "<gray>請到祭壇方塊旁<white>右鍵</white>開啟")),
-                e -> {
-                    click(p);
-                    if (remote) plugin.altar().open(p);
-                    else { p.closeInventory(); plugin.msg().raw(p, "<gray>生命祭壇要親自走到祭壇方塊旁，右鍵開啟。</gray>"); }
-                });
-
-        // 紀錄
-        m.set(16, icon(Material.WRITABLE_BOOK, 1, "<white>mana 紀錄", List.of("<gray>最近 28 筆收支", "", "<yellow>點一下查看")),
+        // ---- 第三列：紀錄與說明 ----
+        m.set(30, icon(Material.WRITABLE_BOOK, 1, "<white>mana 紀錄", List.of("<gray>最近 28 筆收支", "", "<yellow>點一下查看")),
                 e -> { click(p); openLog(p); });
 
-        // 感謝
-        int maxThanks = act().thanksPerDay();
-        int left = maxThanks <= 0 ? 99 : Math.max(0, maxThanks - d.thankedToday.size());
-        m.set(19, icon(Material.POPPY, 1, "<red>感謝",
-                List.of("<gray>感謝幫過你的人，對方得到 mana", "<gray>不會花你自己的 mana",
-                        "<gray>今天還能感謝 <white>" + (maxThanks <= 0 ? "不限" : left + " 人"), "", "<yellow>點一下：選擇玩家")),
-                e -> { click(p); openThanks(p); });
-
-        // 贈與
-        m.set(21, icon(Material.AMETHYST_SHARD, 1, "<light_purple>贈與 mana",
-                List.of("<gray>把自己的 mana 送給別人", "", "<yellow>點一下：選擇玩家")),
-                e -> { click(p); openGift(p); });
-
-        // 我的作品
-        List<Places.Work> mine = plugin.places().worksOf(p.getUniqueId());
-        m.set(23, icon(Material.PAINTING, 1, "<gold>我的作品",
-                List.of("<gray>登記作品，別人來參觀留言時你會得到 mana",
-                        "<gray>已登記 <white>" + mine.size() + "/" + act().maxWorks(), "", "<yellow>點一下：管理作品")),
-                e -> { click(p); openWorks(p); });
-
-        // 參觀附近作品
-        int nearby = plugin.places().worksNear(p.getLocation(), act().worksRadius(), p.getUniqueId()).size();
-        m.set(25, icon(Material.SPYGLASS, 1, "<aqua>參觀附近作品",
-                List.of("<gray>給附近的作品留言，作者會得到 mana",
-                        "<gray>附近 " + (int) act().worksRadius() + " 格內有 <white>" + nearby + "</white> 件作品", "", "<yellow>點一下：選擇作品")),
-                e -> { click(p); openVisit(p); });
-
-        // 留言板（未讀數量非同步更新）
-        m.set(29, icon(Material.BOOK, 1, "<white>收到的留言", List.of("<gray>讀取中…")), e -> { click(p); openComments(p); });
-        act().unseenComments(p.getUniqueId()).thenAccept(n -> plugin.sync(() -> {
-            if (!m.isOpenFor(p)) return;
-            m.set(29, icon(n > 0 ? Material.ENCHANTED_BOOK : Material.BOOK, Math.max(1, n), "<white>收到的留言",
-                    List.of(n > 0 ? "<yellow>有 " + n + " 則新留言！" : "<gray>沒有新留言", "", "<yellow>點一下查看")),
-                    e -> { click(p); openComments(p); });
-        }));
-
-        // 導師
-        mentorButton(m, p, 31);
-
-        // 說明
-        m.set(33, icon(Material.KNOWLEDGE_BOOK, 1, "<green>怎麼得到 mana？",
-                List.of("<white>聊天<gray>：說話後有人接話",
-                        "<white>感謝<gray>：別人感謝你",
-                        "<white>帶新手<gray>：陪新手完成引導",
-                        "<white>探索<gray>：第一次到新的生態域、結構、地標",
-                        "<white>作品<gray>：別人來參觀留言",
-                        "<white>收成<gray>：種田、釣魚、養動物",
-                        "<white>活動<gray>：參加伺服器活動",
+        m.set(32, icon(Material.KNOWLEDGE_BOOK, 1, "<green>怎麼得到 mana？",
+                List.of("<white>靠自己的雙手",
+                        "<gray>・生活手藝：採集、種植、畜牧、釣魚、烹飪、建造",
+                        "<gray>・圖鑑：第一次做到某件事",
+                        "<gray>・城鎮訂單：交出城鎮今天需要的東西",
+                        "<gray>・探索：第一次到新的生態域、結構、地標",
+                        "<white>和大家一起",
+                        "<gray>・聊天被接話、被感謝、帶新手、作品被參觀",
+                        "<gray>・委託板：幫別人完成委託",
+                        "<gray>・合作挑戰：一起打首領、守住突襲（人越多越多）",
+                        "<gray>・社區工程：捐物資、一起完工",
                         "",
+                        "<dark_gray>做同一件事越久收益越少，換著玩最划算",
                         "<dark_gray>AFK 時不會產生 mana")));
 
-        m.set(40, icon(Material.BARRIER, "<red>關閉"), e -> p.closeInventory());
+        m.set(49, icon(Material.BARRIER, "<red>關閉"), e -> p.closeInventory());
         m.border();
         m.open(p);
     }
