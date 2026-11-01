@@ -24,7 +24,7 @@ import java.util.List;
 /** /manaadmin 管理指令 */
 public final class AdminCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("help", "give", "take", "event", "check", "altar", "landmark", "tree", "decay", "orders", "project", "reload");
+    private static final List<String> SUBS = List.of("help", "give", "take", "event", "check", "altar", "landmark", "tree", "decay", "orders", "project", "value", "passive", "reload");
 
     private final ManaCorePlugin plugin;
 
@@ -55,6 +55,29 @@ public final class AdminCommand implements TabExecutor {
                 }
             }
             case "project" -> project(s, a);
+            case "passive" -> {
+                Player t = a.length > 0 ? Bukkit.getPlayerExact(a[0]) : (s instanceof Player sp ? sp : null);
+                PlayerData d = t == null ? null : plugin.mana().get(t);
+                if (d == null) { s.sendMessage(Msg.mm("<red>玩家不在線。</red>")); return true; }
+                for (var sk : io.github.jun32036.manacore.economy.Skill.values())
+                    s.sendMessage(Msg.mm("<white><n></white> Lv<lv> <gray>經驗 <xp>，被動 <b>%：<d></gray>", "n", sk.display, "lv", plugin.craft().level(d, sk),
+                            "xp", (long) d.xp(sk), "b", Math.round(plugin.passives().bonus(t, sk) * 100), "d", io.github.jun32036.manacore.economy.Passives.describe(sk)));
+                Block look = t.getTargetBlockExact(6);
+                if (look != null && !look.getType().isAir())
+                    s.sendMessage(Msg.mm("<gray>看著的方塊 <b> 的掉落物：<d></gray>", "b", look.getType().getKey().getKey(),
+                            "d", look.getDrops(t.getInventory().getItemInMainHand(), t).stream().map(i -> i.getType().getKey().getKey() + "x" + i.getAmount()).toList().toString()));
+            }
+            case "value", "values" -> {
+                if (a.length == 0) {
+                    s.sendMessage(Msg.mm("<green>價值表：基礎 <b> 種，由配方推算 <d> 種。</green><gray>/manaadmin value <物品ID> 查單一物品</gray>",
+                            "b", plugin.values().baseCount(), "d", plugin.values().derivedCount()));
+                } else {
+                    org.bukkit.Material m = org.bukkit.Material.matchMaterial(a[0]);
+                    if (m == null) s.sendMessage(Msg.mm("<red>找不到物品 <i></red>", "i", a[0]));
+                    else s.sendMessage(Msg.mm("<green><i>：<v> 煉金值／個（市集一組 64 = <p> mana）</green>", "i", m.getKey().getKey(),
+                            "v", plugin.values().value(m), "p", plugin.market().price(m, 64)));
+                }
+            }
             case "decay" -> {
                 plugin.mana().forceDecay();
                 s.sendMessage(Msg.mm("<green>已手動執行一次歸土（不影響每日自動歸土）。</green>"));
@@ -80,6 +103,8 @@ public final class AdminCommand implements TabExecutor {
                 "<white>decay</white> <gray>立刻執行一次歸土（測試用）</gray>",
                 "<white>orders [reroll]</white> <gray>查看 / 重新抽選今天的城鎮訂單</gray>",
                 "<white>project list | reset <id></white> <gray>社區工程（內容在 config.yml 的 projects）</gray>",
+                "<white>value [物品ID]</white> <gray>查價值表（煉金與市集共用）</gray>",
+                "<white>passive [玩家]</white> <gray>查看手藝等級與被動加成</gray>",
                 "<white>reload</white> <gray>重新讀取 config.yml</gray>"
         };
         for (String l : lines) s.sendMessage(Msg.mm(l));

@@ -40,6 +40,10 @@ public final class PlayerData {
     public final Set<Skill> capNotifiedSkills = java.util.EnumSet.noneOf(Skill.class);
     /** 今天已經拿過獎勵的合作挑戰（首領種類 / 突襲） */
     public final Set<String> challengesToday = new HashSet<>();
+    /** 煉金值（等價交換用，和 mana 分開） */
+    public long alchemy;
+    /** 煉金爐學會的物品（投入過的） */
+    public final Set<org.bukkit.Material> alchemyKnown = java.util.EnumSet.noneOf(org.bukkit.Material.class);
     /** 今天各張城鎮訂單交過幾份：訂單序號 → 份數 */
     public final Map<Integer, Integer> ordersToday = new HashMap<>();
 

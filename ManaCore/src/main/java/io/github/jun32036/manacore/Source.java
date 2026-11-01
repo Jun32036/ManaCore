@@ -30,6 +30,8 @@ public enum Source {
     COMMISSION_REFUND("commission_refund", "委託退回", false),
     FEE("fee", "委託手續費", false),
     INVEST("invest", "投入社區工程", false),
+    MARKET_BUY("market_buy", "市集購買", false),
+    MARKET_SELL("market_sell", "市集賣出", false),
     ADMIN("admin", "管理員調整", false);
 
     public final String key;

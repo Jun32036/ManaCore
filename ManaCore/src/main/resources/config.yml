@@ -128,6 +128,18 @@ sources:
     # 等級門檻（Lv1 到 Lv10 需要的經驗）與稱號；經驗 = 有效點數，訂單交貨也會給經驗
     levels: [0, 40, 120, 260, 480, 800, 1250, 1850, 2600, 3500]
     titles: [見習, 入門, 熟練, 老手, 匠人, 名匠, 大師, 宗師, 傳說, 生生不息]
+    # 被動加成（Jobs Reborn 式）：加成 = per-level × (等級 − 1)，最高 max
+    # farm/gather/fishing：多拿一份的機率；cooking：熔爐每個熟食多一個的機率；husbandry：雙胞胎機率；build：祭壇建材折扣
+    passives:
+      enabled: true
+      # true 時每次被動擲骰都寫進伺服器紀錄（除錯用）
+      debug: false
+      farm:      { per-level: 0.04, max: 0.36 }
+      gather:    { per-level: 0.03, max: 0.27 }
+      husbandry: { per-level: 0.04, max: 0.36 }
+      fishing:   { per-level: 0.04, max: 0.36 }
+      cooking:   { per-level: 0.04, max: 0.36 }
+      build:     { per-level: 0.02, max: 0.18 }
     # 基礎點數
     points:
       crop: 1              # 成熟作物（小麥、胡蘿蔔、馬鈴薯、甜菜根、地獄疙瘩、可可豆…）
@@ -337,6 +349,213 @@ decay:
   threshold: 500
   rate: 0.05
 
+# ---------------- 價值表（煉金爐與市集共用） ----------------
+# 每種物品值多少「煉金值」：100 煉金值 ≈ 1 mana 的物資價值（煉金值本身不能換成 mana）。
+# base 列出基礎物資；其他物品從合成／燒製／切石配方自動推算（取最便宜的做法）。
+# 把某個物品設成 0 可以讓它沒有價值（煉金爐與市集都不收）。
+values:
+  enabled: true
+  derive-from-recipes: true
+  max-passes: 25
+  base:
+    # 石與土
+    COBBLESTONE: 6
+    STONE: 9
+    DEEPSLATE: 12
+    COBBLED_DEEPSLATE: 9
+    TUFF: 12
+    CALCITE: 22
+    DRIPSTONE_BLOCK: 12
+    GRANITE: 8
+    DIORITE: 8
+    ANDESITE: 8
+    BASALT: 12
+    BLACKSTONE: 15
+    NETHERRACK: 2
+    END_STONE: 20
+    OBSIDIAN: 38
+    CRYING_OBSIDIAN: 80
+    DIRT: 2
+    GRASS_BLOCK: 4
+    MUD: 3
+    MOSS_BLOCK: 10
+    SAND: 4
+    RED_SAND: 5
+    GRAVEL: 4
+    CLAY_BALL: 3
+    FLINT: 8
+    ICE: 5
+    PACKED_ICE: 15
+    SNOWBALL: 1
+    SOUL_SAND: 8
+    SOUL_SOIL: 8
+    MAGMA_BLOCK: 20
+    GLOWSTONE_DUST: 10
+    PRISMARINE_SHARD: 30
+    PRISMARINE_CRYSTALS: 40
+    SCULK: 15
+    # 木與植物
+    OAK_LOG: 19
+    SPRUCE_LOG: 19
+    BIRCH_LOG: 19
+    JUNGLE_LOG: 22
+    ACACIA_LOG: 22
+    DARK_OAK_LOG: 22
+    MANGROVE_LOG: 25
+    CHERRY_LOG: 25
+    PALE_OAK_LOG: 25
+    CRIMSON_STEM: 25
+    WARPED_STEM: 25
+    BAMBOO: 2
+    OAK_SAPLING: 25
+    SPRUCE_SAPLING: 25
+    BIRCH_SAPLING: 25
+    JUNGLE_SAPLING: 30
+    ACACIA_SAPLING: 30
+    DARK_OAK_SAPLING: 30
+    MANGROVE_PROPAGULE: 30
+    CHERRY_SAPLING: 35
+    PALE_OAK_SAPLING: 35
+    AZALEA: 40
+    OAK_LEAVES: 2
+    VINE: 4
+    LILY_PAD: 6
+    CACTUS: 5
+    SUGAR_CANE: 5
+    KELP: 2
+    SEAGRASS: 2
+    BROWN_MUSHROOM: 5
+    RED_MUSHROOM: 5
+    CRIMSON_FUNGUS: 8
+    WARPED_FUNGUS: 8
+    NETHER_WART: 15
+    CHORUS_FRUIT: 20
+    GLOW_LICHEN: 6
+    SPORE_BLOSSOM: 60
+    POPPY: 10
+    DANDELION: 10
+    BLUE_ORCHID: 12
+    ALLIUM: 12
+    AZURE_BLUET: 12
+    RED_TULIP: 12
+    ORANGE_TULIP: 12
+    WHITE_TULIP: 12
+    PINK_TULIP: 12
+    OXEYE_DAISY: 12
+    CORNFLOWER: 12
+    LILY_OF_THE_VALLEY: 12
+    WITHER_ROSE: 200
+    TORCHFLOWER: 60
+    PITCHER_PLANT: 60
+    SUNFLOWER: 15
+    LILAC: 15
+    ROSE_BUSH: 15
+    PEONY: 15
+    PINK_PETALS: 6
+    # 作物與食物
+    WHEAT: 5
+    WHEAT_SEEDS: 2
+    CARROT: 5
+    POTATO: 5
+    BEETROOT: 5
+    BEETROOT_SEEDS: 2
+    MELON_SLICE: 3
+    PUMPKIN: 25
+    MELON: 24
+    SWEET_BERRIES: 5
+    GLOW_BERRIES: 8
+    COCOA_BEANS: 8
+    APPLE: 10
+    EGG: 10
+    HONEY_BOTTLE: 40
+    HONEYCOMB: 20
+    MILK_BUCKET: 100
+    BEEF: 20
+    PORKCHOP: 20
+    CHICKEN: 15
+    MUTTON: 15
+    RABBIT: 20
+    COD: 25
+    SALMON: 30
+    TROPICAL_FISH: 60
+    PUFFERFISH: 60
+    # 礦物
+    COAL: 10
+    CHARCOAL: 10
+    RAW_COPPER: 6
+    COPPER_INGOT: 10
+    RAW_IRON: 17
+    IRON_INGOT: 25
+    RAW_GOLD: 50
+    GOLD_INGOT: 60
+    REDSTONE: 12
+    LAPIS_LAZULI: 17
+    QUARTZ: 15
+    AMETHYST_SHARD: 25
+    DIAMOND: 400
+    EMERALD: 300
+    ANCIENT_DEBRIS: 800
+    NETHERITE_SCRAP: 800
+    # 動物與怪物掉落
+    WHITE_WOOL: 16
+    LEATHER: 33
+    FEATHER: 10
+    STRING: 8
+    RABBIT_HIDE: 30
+    RABBIT_FOOT: 100
+    INK_SAC: 10
+    GLOW_INK_SAC: 40
+    BONE: 10
+    ROTTEN_FLESH: 2
+    SPIDER_EYE: 8
+    GUNPOWDER: 20
+    SLIME_BALL: 25
+    ENDER_PEARL: 300
+    BLAZE_ROD: 150
+    GHAST_TEAR: 300
+    PHANTOM_MEMBRANE: 80
+    SHULKER_SHELL: 1500
+    DRAGON_BREATH: 500
+    NAUTILUS_SHELL: 800
+    HEART_OF_THE_SEA: 8000
+    TURTLE_SCUTE: 200
+    ARMADILLO_SCUTE: 100
+    ECHO_SHARD: 600
+    # 其他
+    SADDLE: 500
+    NAME_TAG: 500
+    ELYTRA: 20000
+    TRIDENT: 3000
+    TOTEM_OF_UNDYING: 5000
+    ENCHANTED_GOLDEN_APPLE: 10000
+    MUSIC_DISC_CAT: 2000
+    EXPERIENCE_BOTTLE: 100
+    BUCKET: 0
+    WATER_BUCKET: 0
+    LAVA_BUCKET: 0
+    BEDROCK: 0
+    COMMAND_BLOCK: 0
+    BARRIER: 0
+    SPAWNER: 0
+
+# ---------------- 煉金爐（等價交換） ----------------
+alchemy:
+  enabled: true
+  # 投入時的損耗百分比（換出不再損耗）。0 = 完全等價
+  loss-percent: 10
+  # 只能換出曾經投入過的物品（像 ProjectE 要先學會）
+  learn-required: true
+
+# ---------------- 玩家市集（公定價） ----------------
+market:
+  enabled: true
+  # 賣出手續費（流入生命之樹）
+  fee-rate: 0.1
+  min-fee: 1
+  max-lots-per-player: 10
+  # 掛幾天沒賣出就退回
+  expire-days: 7
+
 # ---------------- 選單與圖示 ----------------
 menu:
   # 蹲下（Shift）時按「交換手持物品」鍵（預設 F）開啟 /mana 選單
@@ -401,6 +620,8 @@ life-tree:
 # 混凝土、陶土、羊毛、玻璃與光源、銅，以及農作、工具與特別物品。價格大致反映生存取得的難度。
 altar:
   title: '<dark_green>生命祭壇 · 公定價'
+  # 這些分類享「建造」手藝等級折扣（見 sources.craft.passives.build）
+  discount-categories: [stone, wood, color, glass_light]
   shop:
     stone:
       name: 石材

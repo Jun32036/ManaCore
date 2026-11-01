@@ -10,7 +10,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 import io.github.jun32036.manacore.command.AdminCommand;
 import io.github.jun32036.manacore.command.ManaCommand;
 import io.github.jun32036.manacore.command.ThanksCommand;
+import io.github.jun32036.manacore.economy.AlchemyService;
 import io.github.jun32036.manacore.economy.CommissionService;
+import io.github.jun32036.manacore.economy.MarketService;
+import io.github.jun32036.manacore.economy.Passives;
+import io.github.jun32036.manacore.economy.ValueTable;
+import io.github.jun32036.manacore.gui.AlchemyMenu;
+import io.github.jun32036.manacore.gui.MarketMenu;
 import io.github.jun32036.manacore.economy.CoopService;
 import io.github.jun32036.manacore.economy.CraftService;
 import io.github.jun32036.manacore.economy.DexService;
@@ -39,6 +45,12 @@ public final class ManaCorePlugin extends JavaPlugin {
     private Actions actions;
     private ManaMenu menu;
     private Icons icons;
+    private ValueTable values;
+    private AlchemyService alchemy;
+    private MarketService market;
+    private Passives passives;
+    private AlchemyMenu alchemyMenu;
+    private MarketMenu marketMenu;
     private EconomyMenu econMenu;
     private CraftService craft;
     private DexService dex;
@@ -50,6 +62,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         saveDefaultConfig();
+        fillDefaults();
         msg.load(getConfig().getConfigurationSection("messages"));
 
         db = new Database(getLogger());
@@ -66,12 +79,21 @@ public final class ManaCorePlugin extends JavaPlugin {
             commissions.load();
             projects = new ProjectService(this);
             projects.load();
+            market = new MarketService(this);
+            market.load();
         } catch (Exception e) {
             getLogger().severe("無法開啟資料庫，ManaCore 停用：" + e);
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
         icons = new Icons(this);
+        values = new ValueTable(this);
+        values.reload();
+        getLogger().info("價值表：基礎 " + values.baseCount() + " 種，由配方推算 " + values.derivedCount() + " 種");
+        alchemy = new AlchemyService(this);
+        passives = new Passives(this);
+        alchemyMenu = new AlchemyMenu(this);
+        marketMenu = new MarketMenu(this);
         altar = new AltarMenu(this);
         altar.reload();
         actions = new Actions(this);
@@ -83,6 +105,7 @@ public final class ManaCorePlugin extends JavaPlugin {
         orders = new OrderService(this);
         orders.loadToday(false);
         commissions.expireOld();
+        market.expireOld();
 
         var pm = getServer().getPluginManager();
         pm.registerEvents(new PlayerListener(this), this);
@@ -128,10 +151,29 @@ public final class ManaCorePlugin extends JavaPlugin {
         c.setTabCompleter(ex);
     }
 
+    /**
+     * 把插件內建 config.yml 裡、伺服器設定檔缺少的鍵補進記憶體中的設定（不會寫回磁碟）。
+     * 這樣程式裡 getX(path, 預設值) 的寫法也會讀到內建的數值，舊設定檔不必手動補新區塊。
+     */
+    private void fillDefaults() {
+        var cfg = getConfig();
+        var def = cfg.getDefaults();
+        if (def == null) return;
+        int n = 0;
+        for (String key : def.getKeys(true)) {
+            Object v = def.get(key);
+            if (v instanceof ConfigurationSection) continue;
+            if (!cfg.isSet(key)) { cfg.set(key, v); n++; }
+        }
+        if (n > 0) getLogger().info("設定檔缺少 " + n + " 個新設定鍵，已使用內建預設值（要調整請參考插件內的 config.yml）");
+    }
+
     public void reloadAll() {
         reloadConfig();
+        fillDefaults();
         msg.load(getConfig().getConfigurationSection("messages"));
         icons.reload();
+        values.reload();
         altar.reload();
         tree.reload();
         orders.loadToday(false);
@@ -146,6 +188,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     public void onNewDay() {
         orders.loadToday(false);
         commissions.expireOld();
+        market.expireOld();
     }
 
     /**
@@ -181,6 +224,12 @@ public final class ManaCorePlugin extends JavaPlugin {
     public Actions actions() { return actions; }
     public ManaMenu menu() { return menu; }
     public Icons icons() { return icons; }
+    public ValueTable values() { return values; }
+    public AlchemyService alchemy() { return alchemy; }
+    public MarketService market() { return market; }
+    public Passives passives() { return passives; }
+    public AlchemyMenu alchemyMenu() { return alchemyMenu; }
+    public MarketMenu marketMenu() { return marketMenu; }
     public EconomyMenu econMenu() { return econMenu; }
     public CraftService craft() { return craft; }
     public DexService dex() { return dex; }

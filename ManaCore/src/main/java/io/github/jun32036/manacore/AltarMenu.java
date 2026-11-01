@@ -89,7 +89,7 @@ public final class AltarMenu implements Listener {
                     categories.add(new Category(cid, cs.getString("name", cid), icon == null || !icon.isItem() ? Material.CHEST : icon, offers));
             }
         }
-        if (!warnedLegacy && plugin.getConfig().isSet("altar.items") && !plugin.getConfig().isSet("altar.shop")) {
+        if (!warnedLegacy && plugin.getConfig().isSet("altar.items")) {
             warnedLegacy = true;
             plugin.getLogger().info("config.yml 的 altar.items 自 1.4.0 起不再使用，祭壇改用內建的 altar.shop 分類；要自訂請把 altar.shop 區塊複製到設定檔。");
         }
@@ -169,7 +169,7 @@ public final class AltarMenu implements Listener {
         int from = h.page * PAGE_SIZE;
         for (int i = from; i < Math.min(c.offers().size(), from + PAGE_SIZE); i++) {
             Offer o = c.offers().get(i);
-            inv.setItem(i - from, offerIcon(o, c));
+            inv.setItem(i - from, offerIcon(o, c, p));
             h.bySlot.put(i - from, o);
         }
         if (categories.size() > 1) inv.setItem(SLOT_BACK, Menu.icon(Material.ARROW, "<white>返回分類"));
@@ -179,15 +179,26 @@ public final class AltarMenu implements Listener {
         p.openInventory(inv);
     }
 
-    private ItemStack offerIcon(Offer o, Category c) {
+    /** 建材類（石材、木材、混凝土、玻璃光源）享建造等級折扣 */
+    private boolean discountable(Category c) {
+        return plugin.getConfig().getStringList("altar.discount-categories").contains(c.id());
+    }
+
+    private long priceFor(Player p, Offer o, Category c) {
+        return discountable(c) ? plugin.passives().discounted(p, o.price()) : o.price();
+    }
+
+    private ItemStack offerIcon(Offer o, Category c, Player p) {
         ItemStack it = new ItemStack(o.material(), Math.min(o.amount(), o.material().getMaxStackSize()));
+        long price = priceFor(p, o, c);
         it.editMeta(meta -> {
             List<Component> lore = new ArrayList<>();
             lore.add(plain(c.name(), NamedTextColor.DARK_GRAY));
-            lore.add(plain("公定價：" + o.price() + " mana", NamedTextColor.GREEN));
+            if (price < o.price()) lore.add(plain("公定價：" + price + " mana（建造等級折扣，原價 " + o.price() + "）", NamedTextColor.GREEN));
+            else lore.add(plain("公定價：" + price + " mana", NamedTextColor.GREEN));
             lore.add(plain("一次換 " + o.amount() + " 個", NamedTextColor.GRAY));
             lore.add(Component.empty());
-            lore.add(plain("點一下兌換", NamedTextColor.YELLOW));
+            lore.add(plain("點一下兌換一組，Shift 點兌換五組", NamedTextColor.YELLOW));
             meta.lore(lore);
         });
         return it;
@@ -253,7 +264,8 @@ public final class AltarMenu implements Listener {
             click(p);
             openCategory(p, d, c, 0);
         } else if (target instanceof Offer o) {
-            buy(p, o);
+            int lots = e.isShiftClick() ? 5 : 1; // Shift：一次買 5 組
+            for (int i = 0; i < lots; i++) if (!buy(p, o, h.category == null ? o.price() : priceFor(p, o, h.category))) break;
             fillInfo(h.inv, h, d);
         }
     }
@@ -267,8 +279,8 @@ public final class AltarMenu implements Listener {
         if (e.getView().getTopInventory().getHolder(false) instanceof Holder) e.setCancelled(true);
     }
 
-    private void buy(Player p, Offer o) {
-        if (!plugin.mana().spend(p, o.price(), Source.PURCHASE, o.amount() + "x " + o.material().getKey())) return;
+    private boolean buy(Player p, Offer o, long price) {
+        if (!plugin.mana().spend(p, price, Source.PURCHASE, o.amount() + "x " + o.material().getKey())) return false;
         int left = o.amount();
         while (left > 0) {
             int n = Math.min(left, o.material().getMaxStackSize());
@@ -280,8 +292,9 @@ public final class AltarMenu implements Listener {
             }
         }
         p.playSound(p, Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 0.5f, 1.2f);
-        plugin.msg().send(p, "bought", "price", o.price(), "item", Component.translatable(o.material().translationKey()), "amount", o.amount());
+        plugin.msg().send(p, "bought", "price", price, "item", Component.translatable(o.material().translationKey()), "amount", o.amount());
         plugin.mentors().onExchange(p.getUniqueId());
+        return true;
     }
 
     private void offer(Player p, PlayerData d) {
