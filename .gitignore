@@ -6,3 +6,4 @@ node_modules/
 *.db-shm
 交付/
 伺服器工具包/server/
+ManaCore/ManaCore-1.3.0.jar
