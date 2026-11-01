@@ -5,6 +5,15 @@
 伺服器核心：DivineMC 26.3（Paper 分支）　Java 25　建置：`mvn package`（JDK 25 + Maven），輸出 `target/ManaCore-1.5.0.jar`（會先跑單元測試）
 依賴：paper-api 26.3.build.231-stable（provided）、sqlite-jdbc 3.54.1.0（plugin.yml `libraries:` 執行時自動下載）
 
+## 選單長什麼樣
+
+`docs/gui/` 有每個選單的重繪圖（用官方客戶端材質照遊戲畫法畫的，不是遊戲截圖；產生方式見 `模擬工具/gui_render/`）：
+
+| | | |
+| --- | --- | --- |
+| ![主選單](docs/gui/main.png) | ![生活手藝](docs/gui/skills.png) | ![煉金爐](docs/gui/alchemy.png) |
+| ![玩家市集](docs/gui/market.png) | ![委託板](docs/gui/board.png) | ![生命祭壇](docs/gui/altar_stone.png) |
+
 ## 原始碼結構（io.github.jun32036.manacore）
 
 | 檔案 | 職責 |
