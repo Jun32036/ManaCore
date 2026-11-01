@@ -292,6 +292,30 @@ sources:
     items-per-mana: 32
     completion-bonus: 10
 
+  # 成就：達成原版成就得到大量 mana。成就只能達成一次，所以本來就刷不了；daily-cap 0 = 不設上限
+  # task = 一般成就（例如「石器時代」）、goal = 目標（例如「我們需要再深入一點」）、challenge = 挑戰（例如「這是怎麼回事？」）
+  # overrides 可以指定個別成就的 mana（ID 見 https://minecraft.wiki/w/Advancement#List_of_advancements）
+  advancement:
+    enabled: true
+    daily-cap: 0
+    task: 5
+    goal: 15
+    challenge: 40
+    overrides:
+      minecraft:end/kill_dragon: 60
+      minecraft:end/respawn_dragon: 30
+      minecraft:nether/all_effects: 100
+      minecraft:adventure/adventuring_time: 80
+      minecraft:husbandry/balanced_diet: 60
+      minecraft:husbandry/complete_catalogue: 50
+      minecraft:nether/all_potions: 50
+      minecraft:nether/create_full_beacon: 50
+      minecraft:nether/uneasy_alliance: 40
+      minecraft:adventure/kill_all_mobs: 50
+      minecraft:adventure/two_birds_one_arrow: 30
+      minecraft:adventure/hero_of_the_village: 40
+      minecraft:husbandry/bred_all_animals: 50
+
   # 活動參與：由管理員 /manaadmin event 發放，daily-cap 設 0 代表不設上限
   event:
     daily-cap: 0
@@ -312,6 +336,16 @@ decay:
   # 個人持有超過這個數字的部分，每天有 rate 比例歸土，流入生命之樹
   threshold: 500
   rate: 0.05
+
+# ---------------- 選單與圖示 ----------------
+menu:
+  # 蹲下（Shift）時按「交換手持物品」鍵（預設 F）開啟 /mana 選單
+  sneak-swap-opens-menu: true
+
+icons:
+  # 代表 mana 的藍色寶石圖示（自訂材質的頭顱，不需要資源包）。
+  # 留空 = 用內建的藍色寶石；填 none = 改用鑽石；也可以貼上其他頭顱的材質值（minecraft-heads.com 的 Value）
+  mana-texture: ''
 
 # ---------------- 委託板 ----------------
 commissions:
@@ -361,35 +395,173 @@ life-tree:
         - 'say 生命之樹結出果實，全服感謝每一位玩家！'
 
 # ---------------- 生命祭壇（公定價兌換所） ----------------
-# 祭壇只「換出」物資；price 是換一次的 mana，amount 是一次換到的數量
-# slot 是在介面中的位置（0–44），category 只用於顯示
+# 祭壇只「換出」物資，一組一組換（amount 是一次換到的數量，price 是一次的 mana）。
+# 1.4.0 起分成分類（altar.shop），每個分類一頁；舊版的 altar.items（含 slot）已不再使用。
+# 品項選自生存與建築玩家最常用的方塊：深板岩、凝灰岩、方解石、石磚、石英、砂岩、各種木材、
+# 混凝土、陶土、羊毛、玻璃與光源、銅，以及農作、工具與特別物品。價格大致反映生存取得的難度。
 altar:
   title: '<dark_green>生命祭壇 · 公定價'
-  items:
-    stone_bricks:   { material: STONE_BRICKS, amount: 64, price: 10, slot: 0,  category: 基礎建材 }
-    oak_log:        { material: OAK_LOG,      amount: 64, price: 12, slot: 1,  category: 基礎建材 }
-    spruce_log:     { material: SPRUCE_LOG,   amount: 64, price: 12, slot: 2,  category: 基礎建材 }
-    glass:          { material: GLASS,        amount: 64, price: 15, slot: 3,  category: 基礎建材 }
-    bricks:         { material: BRICKS,       amount: 64, price: 12, slot: 4,  category: 基礎建材 }
-    wheat_seeds:    { material: WHEAT_SEEDS,  amount: 16, price: 1,  slot: 9,  category: 農作與食物 }
-    oak_sapling:    { material: OAK_SAPLING,  amount: 4,  price: 2,  slot: 10, category: 農作與食物 }
-    bread:          { material: BREAD,        amount: 16, price: 5,  slot: 11, category: 農作與食物 }
-    poppy:          { material: POPPY,        amount: 16, price: 3,  slot: 18, category: 裝飾與染料 }
-    red_dye:        { material: RED_DYE,      amount: 16, price: 4,  slot: 19, category: 裝飾與染料 }
-    white_banner:   { material: WHITE_BANNER, amount: 4,  price: 6,  slot: 20, category: 裝飾與染料 }
-    iron_pickaxe:   { material: IRON_PICKAXE, amount: 1,  price: 15, slot: 27, category: 工具與功能方塊 }
-    furnace:        { material: FURNACE,      amount: 4,  price: 10, slot: 28, category: 工具與功能方塊 }
-    crafting_table: { material: CRAFTING_TABLE, amount: 4, price: 8, slot: 29, category: 工具與功能方塊 }
-    lantern:        { material: LANTERN,      amount: 8,  price: 8,  slot: 21, category: 裝飾與染料 }
-    flower_pot:     { material: FLOWER_POT,   amount: 8,  price: 4,  slot: 22, category: 裝飾與染料 }
-    name_tag:       { material: NAME_TAG,     amount: 1,  price: 20, slot: 36, category: 特別物品 }
-    saddle:         { material: SADDLE,       amount: 1,  price: 15, slot: 37, category: 特別物品 }
-    firework:       { material: FIREWORK_ROCKET, amount: 16, price: 10, slot: 38, category: 特別物品 }
-    music_disc:     { material: MUSIC_DISC_CAT, amount: 1, price: 40, slot: 39, category: 特別物品 }
+  shop:
+    stone:
+      name: 石材
+      icon: STONE_BRICKS
+      items:
+        cobblestone:        { material: COBBLESTONE,        amount: 64, price: 4 }
+        stone:              { material: STONE,              amount: 64, price: 6 }
+        stone_bricks:       { material: STONE_BRICKS,       amount: 64, price: 10 }
+        smooth_stone:       { material: SMOOTH_STONE,       amount: 64, price: 8 }
+        andesite:           { material: ANDESITE,           amount: 64, price: 5 }
+        polished_andesite:  { material: POLISHED_ANDESITE,  amount: 64, price: 7 }
+        granite:            { material: GRANITE,            amount: 64, price: 5 }
+        polished_granite:   { material: POLISHED_GRANITE,   amount: 64, price: 7 }
+        diorite:            { material: DIORITE,            amount: 64, price: 5 }
+        polished_diorite:   { material: POLISHED_DIORITE,   amount: 64, price: 7 }
+        deepslate:          { material: DEEPSLATE,          amount: 64, price: 8 }
+        cobbled_deepslate:  { material: COBBLED_DEEPSLATE,  amount: 64, price: 6 }
+        polished_deepslate: { material: POLISHED_DEEPSLATE, amount: 64, price: 12 }
+        deepslate_bricks:   { material: DEEPSLATE_BRICKS,   amount: 64, price: 14 }
+        deepslate_tiles:    { material: DEEPSLATE_TILES,    amount: 64, price: 14 }
+        tuff:               { material: TUFF,               amount: 64, price: 8 }
+        polished_tuff:      { material: POLISHED_TUFF,      amount: 64, price: 10 }
+        tuff_bricks:        { material: TUFF_BRICKS,        amount: 64, price: 12 }
+        calcite:            { material: CALCITE,            amount: 64, price: 14 }
+        sandstone:          { material: SANDSTONE,          amount: 64, price: 8 }
+        smooth_sandstone:   { material: SMOOTH_SANDSTONE,   amount: 64, price: 10 }
+        red_sandstone:      { material: RED_SANDSTONE,      amount: 64, price: 10 }
+        bricks:             { material: BRICKS,             amount: 64, price: 12 }
+        mud_bricks:         { material: MUD_BRICKS,         amount: 64, price: 10 }
+        quartz_block:       { material: QUARTZ_BLOCK,       amount: 64, price: 20 }
+        smooth_quartz:      { material: SMOOTH_QUARTZ,      amount: 64, price: 20 }
+        prismarine:         { material: PRISMARINE,         amount: 64, price: 18 }
+        dark_prismarine:    { material: DARK_PRISMARINE,    amount: 64, price: 22 }
+        blackstone:         { material: BLACKSTONE,         amount: 64, price: 10 }
+        polished_blackstone_bricks: { material: POLISHED_BLACKSTONE_BRICKS, amount: 64, price: 14 }
+        basalt:             { material: BASALT,             amount: 64, price: 8 }
+        nether_bricks:      { material: NETHER_BRICKS,      amount: 64, price: 10 }
+        end_stone_bricks:   { material: END_STONE_BRICKS,   amount: 64, price: 18 }
+        purpur_block:       { material: PURPUR_BLOCK,       amount: 64, price: 18 }
+        obsidian:           { material: OBSIDIAN,           amount: 64, price: 24 }
+    wood:
+      name: 木材
+      icon: OAK_LOG
+      items:
+        oak_log:        { material: OAK_LOG,        amount: 64, price: 12 }
+        spruce_log:     { material: SPRUCE_LOG,     amount: 64, price: 12 }
+        birch_log:      { material: BIRCH_LOG,      amount: 64, price: 12 }
+        jungle_log:     { material: JUNGLE_LOG,     amount: 64, price: 14 }
+        acacia_log:     { material: ACACIA_LOG,     amount: 64, price: 14 }
+        dark_oak_log:   { material: DARK_OAK_LOG,   amount: 64, price: 14 }
+        mangrove_log:   { material: MANGROVE_LOG,   amount: 64, price: 16 }
+        cherry_log:     { material: CHERRY_LOG,     amount: 64, price: 16 }
+        pale_oak_log:   { material: PALE_OAK_LOG,   amount: 64, price: 16 }
+        bamboo_block:   { material: BAMBOO_BLOCK,   amount: 64, price: 10 }
+        bamboo_mosaic:  { material: BAMBOO_MOSAIC,  amount: 64, price: 12 }
+        crimson_stem:   { material: CRIMSON_STEM,   amount: 64, price: 16 }
+        warped_stem:    { material: WARPED_STEM,    amount: 64, price: 16 }
+        oak_sapling:    { material: OAK_SAPLING,    amount: 16, price: 4 }
+    color:
+      name: 混凝土、陶土與羊毛
+      icon: WHITE_CONCRETE
+      items:
+        white_concrete:      { material: WHITE_CONCRETE,      amount: 64, price: 12 }
+        light_gray_concrete: { material: LIGHT_GRAY_CONCRETE, amount: 64, price: 12 }
+        gray_concrete:       { material: GRAY_CONCRETE,       amount: 64, price: 12 }
+        black_concrete:      { material: BLACK_CONCRETE,      amount: 64, price: 12 }
+        red_concrete:        { material: RED_CONCRETE,        amount: 64, price: 12 }
+        blue_concrete:       { material: BLUE_CONCRETE,       amount: 64, price: 12 }
+        cyan_concrete:       { material: CYAN_CONCRETE,       amount: 64, price: 12 }
+        terracotta:          { material: TERRACOTTA,          amount: 64, price: 10 }
+        white_terracotta:    { material: WHITE_TERRACOTTA,    amount: 64, price: 12 }
+        light_gray_terracotta: { material: LIGHT_GRAY_TERRACOTTA, amount: 64, price: 12 }
+        brown_terracotta:    { material: BROWN_TERRACOTTA,    amount: 64, price: 12 }
+        white_wool:          { material: WHITE_WOOL,          amount: 64, price: 10 }
+        light_gray_wool:     { material: LIGHT_GRAY_WOOL,     amount: 64, price: 10 }
+        gray_wool:           { material: GRAY_WOOL,           amount: 64, price: 10 }
+        black_wool:          { material: BLACK_WOOL,          amount: 64, price: 10 }
+        red_wool:            { material: RED_WOOL,            amount: 64, price: 10 }
+        white_dye:           { material: WHITE_DYE,           amount: 16, price: 4 }
+        black_dye:           { material: BLACK_DYE,           amount: 16, price: 4 }
+        red_dye:             { material: RED_DYE,             amount: 16, price: 4 }
+        blue_dye:            { material: BLUE_DYE,            amount: 16, price: 4 }
+        green_dye:           { material: GREEN_DYE,           amount: 16, price: 4 }
+        yellow_dye:          { material: YELLOW_DYE,          amount: 16, price: 4 }
+    glass_light:
+      name: 玻璃、光源與銅
+      icon: LANTERN
+      items:
+        glass:              { material: GLASS,              amount: 64, price: 15 }
+        glass_pane:         { material: GLASS_PANE,         amount: 64, price: 10 }
+        tinted_glass:       { material: TINTED_GLASS,       amount: 64, price: 20 }
+        white_stained_glass: { material: WHITE_STAINED_GLASS, amount: 64, price: 16 }
+        lantern:            { material: LANTERN,            amount: 16, price: 10 }
+        soul_lantern:       { material: SOUL_LANTERN,       amount: 16, price: 12 }
+        sea_lantern:        { material: SEA_LANTERN,        amount: 16, price: 16 }
+        glowstone:          { material: GLOWSTONE,          amount: 16, price: 10 }
+        shroomlight:        { material: SHROOMLIGHT,        amount: 16, price: 12 }
+        end_rod:            { material: END_ROD,            amount: 16, price: 10 }
+        pearlescent_froglight: { material: PEARLESCENT_FROGLIGHT, amount: 8, price: 12 }
+        torch:              { material: TORCH,              amount: 64, price: 3 }
+        copper_block:       { material: COPPER_BLOCK,       amount: 16, price: 10 }
+        cut_copper:         { material: CUT_COPPER,         amount: 16, price: 10 }
+        waxed_oxidized_copper: { material: WAXED_OXIDIZED_COPPER, amount: 16, price: 14 }
+        waxed_oxidized_cut_copper: { material: WAXED_OXIDIZED_CUT_COPPER, amount: 16, price: 14 }
+    farm:
+      name: 農作與食物
+      icon: WHEAT
+      items:
+        wheat_seeds:    { material: WHEAT_SEEDS,    amount: 16, price: 1 }
+        carrot:         { material: CARROT,         amount: 16, price: 2 }
+        potato:         { material: POTATO,         amount: 16, price: 2 }
+        beetroot_seeds: { material: BEETROOT_SEEDS, amount: 16, price: 1 }
+        sweet_berries:  { material: SWEET_BERRIES,  amount: 16, price: 2 }
+        sugar_cane:     { material: SUGAR_CANE,     amount: 16, price: 2 }
+        bamboo:         { material: BAMBOO,         amount: 16, price: 2 }
+        bread:          { material: BREAD,          amount: 16, price: 5 }
+        bone_meal:      { material: BONE_MEAL,      amount: 32, price: 6 }
+        hay_block:      { material: HAY_BLOCK,      amount: 16, price: 6 }
+        moss_block:     { material: MOSS_BLOCK,     amount: 64, price: 10 }
+        grass_block:    { material: GRASS_BLOCK,    amount: 64, price: 8 }
+        oak_leaves:     { material: OAK_LEAVES,     amount: 64, price: 6 }
+        azalea:         { material: AZALEA,         amount: 8,  price: 6 }
+        poppy:          { material: POPPY,          amount: 16, price: 3 }
+    tools:
+      name: 工具與功能方塊
+      icon: IRON_PICKAXE
+      items:
+        iron_pickaxe:   { material: IRON_PICKAXE,   amount: 1, price: 15 }
+        iron_axe:       { material: IRON_AXE,       amount: 1, price: 15 }
+        iron_shovel:    { material: IRON_SHOVEL,    amount: 1, price: 10 }
+        shears:         { material: SHEARS,         amount: 1, price: 6 }
+        fishing_rod:    { material: FISHING_ROD,    amount: 1, price: 6 }
+        furnace:        { material: FURNACE,        amount: 4, price: 10 }
+        smoker:         { material: SMOKER,         amount: 1, price: 6 }
+        crafting_table: { material: CRAFTING_TABLE, amount: 4, price: 8 }
+        chest:          { material: CHEST,          amount: 8, price: 8 }
+        barrel:         { material: BARREL,         amount: 8, price: 8 }
+        scaffolding:    { material: SCAFFOLDING,    amount: 64, price: 8 }
+        ladder:         { material: LADDER,         amount: 32, price: 6 }
+        oak_door:       { material: OAK_DOOR,       amount: 8, price: 6 }
+        oak_trapdoor:   { material: OAK_TRAPDOOR,   amount: 16, price: 6 }
+        oak_fence:      { material: OAK_FENCE,      amount: 64, price: 10 }
+        item_frame:     { material: ITEM_FRAME,     amount: 8, price: 8 }
+        flower_pot:     { material: FLOWER_POT,     amount: 8, price: 4 }
+        white_banner:   { material: WHITE_BANNER,   amount: 4, price: 6 }
+    special:
+      name: 特別物品
+      icon: NAME_TAG
+      items:
+        name_tag:       { material: NAME_TAG,        amount: 1,  price: 20 }
+        saddle:         { material: SADDLE,          amount: 1,  price: 15 }
+        firework:       { material: FIREWORK_ROCKET, amount: 16, price: 10 }
+        music_disc_cat: { material: MUSIC_DISC_CAT,  amount: 1,  price: 40 }
+        music_disc_wait: { material: MUSIC_DISC_WAIT, amount: 1,  price: 40 }
+        ender_pearl:    { material: ENDER_PEARL,     amount: 4,  price: 12 }
+        heart_of_the_sea: { material: HEART_OF_THE_SEA, amount: 1, price: 80 }
+        elytra:         { material: ELYTRA,          amount: 1,  price: 300 }
 
 # ---------------- 訊息（MiniMessage 格式） ----------------
 messages:
-  prefix: '<green>✿ </green>'
+  prefix: '<aqua>◆ </aqua>'
   earned: '<gray>+<green><amount></green> mana <dark_gray>·</dark_gray> <reason></gray>'
   balance-header: '<green>你的 mana：<white><balance></white></green>'
   decay-notice: '<gray>持有超過 <threshold> 的部分，每天會有 <rate> 歸土回生命之樹。</gray>'

@@ -326,8 +326,9 @@ public final class EconomyMenu {
             if (slot > 15) break;
             long fee = cs.fee(r);
             boolean ok = d.balance >= r + fee;
-            m.set(slot++, icon(ok ? Material.AMETHYST_SHARD : Material.GRAY_DYE, (int) Math.min(64, r), (ok ? "<light_purple>" : "<gray>") + "酬謝 " + r + " mana",
-                    List.of("<gray>手續費 " + fee + "（流入生命之樹）", "<gray>合計扣 <white>" + (r + fee), "", ok ? "<yellow>點一下：發布" : "<red>mana 不夠")),
+            String tierName = (ok ? "<aqua>" : "<gray>") + "酬謝 " + r + " mana";
+            List<String> tierLore = List.of("<gray>手續費 " + fee + "（流入生命之樹）", "<gray>合計扣 <white>" + (r + fee), "", ok ? "<yellow>點一下：發布" : "<red>mana 不夠");
+            m.set(slot++, ok ? plugin.icons().mana((int) Math.min(64, r), tierName, tierLore) : icon(Material.GRAY_DYE, (int) Math.min(64, r), tierName, tierLore),
                     e -> {
                         click(p);
                         if (cs.postItem(p, mat, amount, r)) p.closeInventory();
@@ -464,13 +465,14 @@ public final class EconomyMenu {
             });
         }
         if (pr.manaGoal > 0) {
-            m.set(46, icon(Material.AMETHYST_CLUSTER, 1, "<light_purple>mana：" + pr.mana + "/" + pr.manaGoal,
+            m.set(46, plugin.icons().mana(1, "<aqua>mana：" + pr.mana + "/" + pr.manaGoal,
                     List.of(bar(pr.mana / (double) Math.max(1, pr.manaGoal), 12), "<gray>你的 mana：<white>" + d.balance)));
             int s = 47;
             for (long a : INVEST_AMOUNTS) {
                 boolean ok = d.balance >= a && !pr.done && pr.mana < pr.manaGoal;
-                m.set(s++, icon(ok ? Material.AMETHYST_SHARD : Material.GRAY_DYE, (int) Math.min(64, a), (ok ? "<light_purple>" : "<gray>") + "投入 " + a + " mana",
-                        List.of(ok ? "<yellow>點一下投入" : pr.done ? "<gray>已完工" : "<red>不能投入")),
+                String invName = (ok ? "<aqua>" : "<gray>") + "投入 " + a + " mana";
+                List<String> invLore = List.of(ok ? "<yellow>點一下投入" : pr.done ? "<gray>已完工" : "<red>不能投入");
+                m.set(s++, ok ? plugin.icons().mana((int) Math.min(64, a), invName, invLore) : icon(Material.GRAY_DYE, (int) Math.min(64, a), invName, invLore),
                         e -> {
                             click(p);
                             ProjectService.Project cur = plugin.projects().get(id);

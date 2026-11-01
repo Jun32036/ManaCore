@@ -1,8 +1,8 @@
-# ManaCore 1.3.0 —「生生不息」mana 核心插件
+# ManaCore 1.4.0 —「生生不息」mana 核心插件
 
 > 1.3.0 新增經濟系統（生活手藝、圖鑑、城鎮訂單、委託板、合作挑戰、社區工程），設計說明見 [ECONOMY.md](ECONOMY.md)。
 
-伺服器核心：DivineMC 26.3（Paper 分支）　Java 25　建置：`mvn package`（JDK 25 + Maven），輸出 `target/ManaCore-1.3.0.jar`（會先跑單元測試）
+伺服器核心：DivineMC 26.3（Paper 分支）　Java 25　建置：`mvn package`（JDK 25 + Maven），輸出 `target/ManaCore-1.4.0.jar`（會先跑單元測試）
 依賴：paper-api 26.3.build.231-stable（provided）、sqlite-jdbc 3.54.1.0（plugin.yml `libraries:` 執行時自動下載）
 
 ## 原始碼結構（io.github.jun32036.manacore）
@@ -20,7 +20,7 @@
 | `gui/Menu`、`gui/ManaMenu` | `/mana` 箱子選單框架與所有選單頁 |
 | `listener/ChatListener` | 聊天接話 mana（1.2.0 重寫，見下） |
 | `listener/ExploreTask` | 探索：生態域、結構、地標 |
-| `listener/PlayerListener` | 進出、AFK、祭壇右鍵 |
+| `listener/PlayerListener` | 進出、AFK、祭壇右鍵、Shift+F 開選單、成就 mana |
 | `listener/LifeListener` | 1.3.0：生活手藝與圖鑑的事件（種植、採集、畜牧、釣魚、烹飪、建造）、防「放了再拆」、村民交易開關 |
 | `economy/EconMath` | 1.3.0：新鮮度、多樣性、等級、訂單抽選、手續費等純計算（有單元測試） |
 | `economy/CraftService` | 生活手藝：點數、每種手藝上限、經驗與等級 |
@@ -30,6 +30,7 @@
 | `economy/CoopService` | 結伴偵測、合作挑戰（首領、突襲） |
 | `economy/ProjectService` | 社區工程：捐物資、投入 mana、完工指令 |
 | `gui/EconomyMenu` | 以上功能的選單頁 |
+| `gui/Icons` | 1.4.0：代表 mana 的藍色寶石圖示（自訂材質頭顱） |
 | `command/*` | `/mana`、`/thanks`、`/manaadmin` |
 
 資料表：accounts、daily、ledger、discoveries、thanks_log、works、comments、mentors、landmarks、altars、kv；
@@ -53,11 +54,12 @@
 - 1.0.0：mana 來源、每日上限、歸土、生命之樹、祭壇、作品、導師、管理指令
 - 1.1.0：`/mana` 圖形選單、預設留言、`Actions` 共用邏輯
 - 1.2.0：修正聊天 mana 被洗頻與群聊灌水、同一對玩家的每日/每週上限
+- 1.4.0：Shift+F 開啟選單；mana 圖示改為藍色寶石（聊天前綴 ◆）；達成原版成就得到大量 mana；祭壇改為分類翻頁、128 種常用方塊一組一組換（`altar.shop`，舊的 `altar.items` 不再使用）
 - 1.3.0：經濟系統。「生產收成」改為六種生活手藝（新鮮度、多樣性、結伴加成、等級）；新增圖鑑、城鎮訂單、委託板、合作挑戰、社區工程；祭壇新增特別物品；可選關閉村民交易
 
-## 1.3.0 安裝與升級
+## 安裝與升級
 
-1. `mvn package` 產生 `target/ManaCore-1.3.0.jar`。
+1. `mvn package` 產生 `target/ManaCore-1.4.0.jar`。
 2. 測試服沿用 update 資料夾的做法：把新 jar 改名成和 `plugins\` 裡現有檔案**完全相同的檔名**（目前是 `ManaCore-1.0.0.jar`），放進 `plugins\update\`，再重啟伺服器。
 3. 舊的 `config.yml` 不必改，新功能用內建預設值運作。要調整再把新區塊複製過去（見 ECONOMY.md 第 7 節）。
 4. 舊的「生產收成」點數不再累積；過去的紀錄仍會以「生產收成（舊版）」顯示。
@@ -73,5 +75,6 @@
 - [ ] `/mana orders`：顯示 6 張訂單；交貨扣物品、加 mana；交滿一張時全服公告並發完成獎勵；跨日（或 `/manaadmin orders reroll`）換新
 - [ ] 委託板：A 發布物品委託（扣酬謝＋手續費，生命之樹增加）→ B 交貨 → A 收到物品、B 收到酬謝與助人 mana；A 離線時改為「我的委託」領取；服務委託的接下、確認、取消、放棄
 - [ ] 社區工程：捐物資、投入 mana、完工指令執行
+- [ ] 1.4.0：蹲下按 F 開啟選單；達成成就（例如 `/advancement grant 玩家 only minecraft:story/mine_diamond`）得到 mana；`/altar` 顯示分類、可翻頁購買；mana 圖示顯示為藍色寶石
 - [ ] 兩人一起種田：結伴加成生效（主選單頭像顯示「身邊有 1 位夥伴」）
 - [ ] 合作挑戰（需真人，ClaudeBot 的攻擊不會傳到伺服器）：兩人打遠古守衛或突襲勝利
