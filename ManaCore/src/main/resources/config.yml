@@ -546,7 +546,7 @@ alchemy:
   # 只能換出曾經投入過的物品（像 ProjectE 要先學會）
   learn-required: true
 
-# ---------------- 玩家市集（公定價） ----------------
+# ---------------- 玩家市集 ----------------
 market:
   enabled: true
   # 賣出手續費（流入生命之樹）
@@ -563,6 +563,23 @@ menu:
   # true：主選單與表單用伺服器對話框（真正的按鈕、滑桿、文字輸入，需要 1.21.6 以上的客戶端）；
   # false：全部用箱子介面。對話框開啟時，舊版客戶端的玩家可用 /mana chest 開箱子版主選單
   dialogs: true
+
+# ---------------- 介面資源包 ----------------
+# 選單的自訂外觀（深色面板、圖示磁磚、重新上色的按鈕與提示框）。玩家進入時會被詢問是否安裝；
+# 沒安裝的人看到原版物品的版本，功能完全一樣。
+resource-pack:
+  enabled: true
+  # 強制安裝（拒絕就被踢出）。建議 false
+  required: false
+  prompt: '<aqua>生生不息</aqua> 的介面資源包：安裝後選單會有自己的樣式。不安裝也能玩。'
+  # 自己放到網路空間時填網址（例如 https://example.com/manacore-pack.zip），留空則用下面的內建伺服器
+  url: ''
+  serve:
+    enabled: true
+    port: 25580
+    # 玩家連線時下載資源包用的主機名稱或 IP：正式服請改成對外的網址（例如 mc.example.com），
+    # 主機商若另外分配連接埠也要在 port 改成對外的那個
+    public-host: localhost
 
 icons:
   # 代表 mana 的藍色寶石圖示（自訂材質的頭顱，不需要資源包）。
@@ -616,13 +633,13 @@ life-tree:
       commands:
         - 'say 生命之樹結出果實，全服感謝每一位玩家！'
 
-# ---------------- 生命祭壇（公定價兌換所） ----------------
+# ---------------- 生命祭壇（兌換所） ----------------
 # 祭壇只「換出」物資，一組一組換（amount 是一次換到的數量，price 是一次的 mana）。
 # 1.4.0 起分成分類（altar.shop），每個分類一頁；舊版的 altar.items（含 slot）已不再使用。
 # 品項選自生存與建築玩家最常用的方塊：深板岩、凝灰岩、方解石、石磚、石英、砂岩、各種木材、
 # 混凝土、陶土、羊毛、玻璃與光源、銅，以及農作、工具與特別物品。價格大致反映生存取得的難度。
 altar:
-  title: '<dark_green>生命祭壇 · 公定價'
+  title: '<dark_green>生命祭壇'
   # 這些分類享「建造」手藝等級折扣（見 sources.craft.passives.build）
   discount-categories: [stone, wood, color, glass_light]
   shop:
@@ -747,7 +764,6 @@ altar:
         grass_block:    { material: GRASS_BLOCK,    amount: 64, price: 8 }
         oak_leaves:     { material: OAK_LEAVES,     amount: 64, price: 6 }
         azalea:         { material: AZALEA,         amount: 8,  price: 6 }
-        poppy:          { material: POPPY,          amount: 16, price: 3 }
     tools:
       name: 工具與功能方塊
       icon: IRON_PICKAXE

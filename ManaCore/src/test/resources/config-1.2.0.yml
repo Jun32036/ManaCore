@@ -146,11 +146,11 @@ life-tree:
       commands:
         - 'say 生命之樹結出果實，全服感謝每一位玩家！'
 
-# ---------------- 生命祭壇（公定價兌換所） ----------------
+# ---------------- 生命祭壇（兌換所） ----------------
 # 祭壇只「換出」物資；price 是換一次的 mana，amount 是一次換到的數量
 # slot 是在介面中的位置（0–44），category 只用於顯示
 altar:
-  title: '<dark_green>生命祭壇 · 公定價'
+  title: '<dark_green>生命祭壇'
   items:
     stone_bricks:   { material: STONE_BRICKS, amount: 64, price: 10, slot: 0,  category: 基礎建材 }
     oak_log:        { material: OAK_LOG,      amount: 64, price: 12, slot: 1,  category: 基礎建材 }

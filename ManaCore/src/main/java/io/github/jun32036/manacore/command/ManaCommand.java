@@ -112,7 +112,7 @@ public final class ManaCommand implements TabExecutor {
                 "<white>/mana request service <酬謝> <說明></white> <gray>請人幫忙做一件事</gray>",
                 "<white>/mana projects</white> <gray>社區工程：一起蓋公共建設</gray>",
                 "<white>/mana alchemy</white> <gray>煉金爐：多餘的物品等價換成其他物品</gray>",
-                "<white>/mana market</white> <gray>玩家市集：公定價買賣</gray>",
+                "<white>/mana market</white> <gray>玩家市集：價格買賣</gray>",
                 "<white>/mana sell</white> <gray>把手上的物品整疊上架</gray>",
                 "<gray>小技巧：蹲下按 F 也能打開選單；舊版客戶端看不到對話框時用 /mana chest</gray>",
                 "<white>/thanks <玩家> [原因]</white> <gray>感謝別人，對方會得到 mana</gray>",

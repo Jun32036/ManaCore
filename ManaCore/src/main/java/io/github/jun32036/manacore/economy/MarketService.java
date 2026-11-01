@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * 玩家市集（公定價）：玩家把手上的物品掛到全服市集，價格由價值表決定、不能自訂（不講價、不比價）。
+ * 玩家市集：玩家把手上的物品掛到全服市集，價格由價值表決定、不能自訂（不講價、不比價）。
  * 買家付 mana 給賣家，另收手續費流入生命之樹。市集是玩家之間的 mana 轉移，不會產生 mana。
  * 掛太久沒賣掉的會下架退回（賣家離線時先存著，上線後到「我的攤位」領取）。
  */
@@ -62,7 +62,7 @@ public final class MarketService {
         return EconMath.fee(price, feeRate(), plugin.getConfig().getLong("market.min-fee", 1));
     }
 
-    /** 一批物品的公定價（mana）：價值 × 數量 ÷ 100，無條件進位，至少 1 */
+    /** 一批物品的價格（mana）：價值 × 數量 ÷ 100，無條件進位，至少 1 */
     public long price(Material m, int amount) {
         long v = plugin.values().value(m);
         if (v <= 0) return 0;
@@ -126,12 +126,12 @@ public final class MarketService {
             return false;
         }
         if (!AlchemyService.isPlain(it)) {
-            plugin.msg().raw(p, "<gray>帶有附魔、自訂名稱或說明的物品沒有公定價，不能上架（可以用委託板或贈與）。</gray>");
+            plugin.msg().raw(p, "<gray>帶有附魔、自訂名稱或說明的物品沒有固定價格，不能上架（可以用委託板或贈與）。</gray>");
             return false;
         }
         long price = price(it.getType(), it.getAmount());
         if (price <= 0) {
-            plugin.msg().raw(p, "<gray><i> 沒有公定價，不能上架。</gray>", "i", Component.translatable(it.getType().translationKey()));
+            plugin.msg().raw(p, "<gray><i> 沒有固定價格，不能上架。</gray>", "i", Component.translatable(it.getType().translationKey()));
             return false;
         }
         long mineOpen = live.values().stream().filter(l -> p.getUniqueId().equals(l.seller) && "open".equals(l.status)).count();
@@ -170,7 +170,7 @@ public final class MarketService {
             }
             l.id = id;
             live.put(id, l);
-            plugin.msg().raw(p, "<green>已上架 <i> ×<n>，公定價 <p> mana（賣出時手續費 <f>）。</green>",
+            plugin.msg().raw(p, "<green>已上架 <i> ×<n>，價格 <p> mana（賣出時手續費 <f>）。</green>",
                     "i", Component.translatable(l.material.translationKey()), "n", l.amount, "p", l.price, "f", fee(l.price));
         }));
         p.playSound(p, Sound.ENTITY_VILLAGER_TRADE, 0.6f, 1.1f);

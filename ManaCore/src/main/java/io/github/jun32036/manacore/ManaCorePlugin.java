@@ -26,6 +26,8 @@ import io.github.jun32036.manacore.economy.ProjectService;
 import io.github.jun32036.manacore.gui.EconomyMenu;
 import io.github.jun32036.manacore.gui.Icons;
 import io.github.jun32036.manacore.gui.ManaMenu;
+import io.github.jun32036.manacore.theme.ResourcePackService;
+import io.github.jun32036.manacore.theme.Theme;
 import io.github.jun32036.manacore.gui.Menu;
 import io.github.jun32036.manacore.listener.ChatListener;
 import io.github.jun32036.manacore.listener.ExploreTask;
@@ -52,6 +54,8 @@ public final class ManaCorePlugin extends JavaPlugin {
     private Passives passives;
     private AlchemyMenu alchemyMenu;
     private Dialogs dialogs;
+    private Theme theme;
+    private ResourcePackService pack;
     private MarketMenu marketMenu;
     private EconomyMenu econMenu;
     private CraftService craft;
@@ -89,6 +93,9 @@ public final class ManaCorePlugin extends JavaPlugin {
             return;
         }
         icons = new Icons(this);
+        pack = new ResourcePackService(this);
+        pack.start();
+        theme = new Theme(this);
         values = new ValueTable(this);
         values.reload();
         getLogger().info("價值表：基礎 " + values.baseCount() + " 種，由配方推算 " + values.derivedCount() + " 種");
@@ -115,6 +122,7 @@ public final class ManaCorePlugin extends JavaPlugin {
         pm.registerEvents(new ChatListener(this), this);
         pm.registerEvents(new LifeListener(this), this);
         pm.registerEvents(coop, this);
+        pm.registerEvents(pack, this);
         pm.registerEvents(altar, this);
         pm.registerEvents(new Menu.Listen(), this);
 
@@ -143,6 +151,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     @Override
     public void onDisable() {
         getServer().getServicesManager().unregisterAll(this);
+        if (pack != null) pack.stop();
         if (mana != null) for (PlayerData d : mana.all()) mana.saveAllCrafts(d);
         if (db != null) db.close();
     }
@@ -233,6 +242,8 @@ public final class ManaCorePlugin extends JavaPlugin {
     public Passives passives() { return passives; }
     public AlchemyMenu alchemyMenu() { return alchemyMenu; }
     public Dialogs dialogs() { return dialogs; }
+    public Theme theme() { return theme; }
+    public ResourcePackService pack() { return pack; }
 
     /** 開主選單：對話框版（預設）或箱子版 */
     public void openHub(Player p) {

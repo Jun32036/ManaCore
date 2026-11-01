@@ -65,7 +65,7 @@ public final class ManaMenu {
     public void openMain(Player p) {
         PlayerData d = data(p);
         if (d == null) return;
-        Menu m = new Menu(5, "<dark_green>◆ 生生不息 · mana");
+        Menu m = new Menu(plugin, p, 5, "<dark_green>◆ 生生不息 · mana", Menu.LIFE);
         EconomyMenu em = plugin.econMenu();
         m.header(plugin, p, null);
 
@@ -83,8 +83,8 @@ public final class ManaMenu {
         int companions = plugin.coop().companions(p);
         if (companions > 0) today.add("<green>身邊有 " + companions + " 位夥伴：生活手藝加成中");
         if (plugin.mana().isAfk(d)) today.add("<red>你目前 AFK，暫時不會產生 mana");
-        m.set(2, icon(Material.CLOCK, 1, "<gold>今天的 mana", today));
-        m.set(6, icon(Material.KNOWLEDGE_BOOK, 1, "<green>怎麼得到 mana？", List.of(
+        m.set(2, plugin.theme().button(p, "today", Material.CLOCK, 1, "<gold>今天的 mana", today));
+        m.set(6, plugin.theme().button(p, "help", Material.KNOWLEDGE_BOOK, 1, "<green>怎麼得到 mana？", List.of(
                 "<white>靠自己的雙手",
                 "<gray>・生活手藝：採集、種植、畜牧、釣魚、烹飪、建造",
                 "<gray>・圖鑑：第一次做到某件事",
@@ -103,26 +103,26 @@ public final class ManaMenu {
         // ---- 第一列：靠自己的雙手 ----
         m.label(9, Menu.SELF, "<green>靠自己的雙手");
         m.label(17, Menu.SELF, "<green>靠自己的雙手");
-        m.set(10, icon(Material.IRON_HOE, 1, "<green>生活手藝",
+        m.set(10, plugin.theme().button(p, "skills", Material.IRON_HOE, 1, "<green>生活手藝",
                 List.of("<gray>採集、種植、畜牧、釣魚、烹飪、建造", "<gray>等級、被動加成、新鮮度", "", "<yellow>點一下查看")),
                 e -> { click(p); em.openSkills(p); });
         int dexTotal = 0;
         for (DexService.Category c : DexService.Category.values()) dexTotal += plugin.dex().count(d, c);
-        m.set(11, icon(Material.BOOK, 1, "<aqua>圖鑑",
+        m.set(11, plugin.theme().button(p, "dex", Material.BOOK, 1, "<aqua>圖鑑",
                 List.of("<gray>第一次釣到、種出、做出、繁殖的東西都有 mana", "<gray>已登錄 <white>" + dexTotal + "</white> 種", "", "<yellow>點一下查看")),
                 e -> { click(p); em.openDex(p); });
         int open = 0;
         for (var o : plugin.orders().today()) if (!o.complete()) open++;
-        m.set(12, icon(Material.BELL, 1, "<gold>城鎮訂單",
+        m.set(12, plugin.theme().button(p, "orders", Material.BELL, 1, "<gold>城鎮訂單",
                 List.of("<gray>城鎮今天需要的東西，交貨換 mana", "<gray>還有 <white>" + open + "</white> 張訂單等人完成", "", "<yellow>點一下查看")),
                 e -> { click(p); em.openOrders(p); });
         if (plugin.alchemy().enabled())
-            m.set(13, icon(Material.BREWING_STAND, 1, "<light_purple>煉金爐 · 等價交換",
+            m.set(13, plugin.theme().button(p, "alchemy", Material.BREWING_STAND, 1, "<light_purple>煉金爐 · 等價交換",
                     List.of("<gray>多餘的物品換成煉金值，再換出等值的物品", "<gray>煉金值：<white>" + d.alchemy, "", "<yellow>點一下開啟")),
                     e -> { click(p); plugin.alchemyMenu().open(p, 0); });
         boolean remote = p.hasPermission("manacore.altar.remote");
-        m.set(14, icon(Material.LODESTONE, 1, "<aqua>生命祭壇",
-                List.of("<gray>用 mana 照公定價換物資，一組一組換", "",
+        m.set(14, plugin.theme().button(p, "altar", Material.LODESTONE, 1, "<aqua>生命祭壇",
+                List.of("<gray>用 mana 照固定價格換物資，一組一組換", "",
                         remote ? "<yellow>點一下：開啟兌換介面" : "<gray>請到祭壇方塊旁<white>右鍵</white>開啟")),
                 e -> {
                     click(p);
@@ -131,8 +131,8 @@ public final class ManaMenu {
                 });
         if (plugin.market().enabled()) {
             int lots = plugin.market().open().size(), returned = plugin.market().returnedCount(p.getUniqueId());
-            ItemStack mk = icon(Material.EMERALD_BLOCK, 1, "<aqua>玩家市集",
-                    List.of("<gray>向其他玩家買東西、把多餘的賣掉", "<gray>公定價、不講價", "<gray>目前有 <white>" + lots + "</white> 批商品",
+            ItemStack mk = plugin.theme().button(p, "market", Material.EMERALD_BLOCK, 1, "<aqua>玩家市集",
+                    List.of("<gray>向其他玩家買東西、把多餘的賣掉", "<gray>價格、不講價", "<gray>目前有 <white>" + lots + "</white> 批商品",
                             returned > 0 ? "<yellow>有 " + returned + " 批退回的物品待領取！" : "", "<yellow>點一下查看"));
             if (returned > 0) Menu.glint(mk);
             m.set(15, mk, e -> { click(p); plugin.marketMenu().open(p, 0); });
@@ -143,31 +143,31 @@ public final class ManaMenu {
         m.label(26, Menu.SOCIAL, "<light_purple>和大家一起");
         int maxThanks = act().thanksPerDay();
         int left = maxThanks <= 0 ? 99 : Math.max(0, maxThanks - d.thankedToday.size());
-        m.set(19, icon(Material.POPPY, 1, "<red>感謝",
+        m.set(19, plugin.theme().button(p, "thanks", Material.APPLE, 1, "<red>感謝",
                 List.of("<gray>感謝幫過你的人，對方得到 mana", "<gray>不會花你自己的 mana",
                         "<gray>今天還能感謝 <white>" + (maxThanks <= 0 ? "不限" : left + " 人"), "", "<yellow>點一下：選擇玩家")),
                 e -> { click(p); openThanks(p); });
-        m.set(20, plugin.icons().mana(1, "<aqua>贈與 mana", List.of("<gray>把自己的 mana 送給別人", "", "<yellow>點一下：選擇玩家")),
+        m.set(20, plugin.theme().mana(p, 1, "<aqua>贈與 mana", List.of("<gray>把自己的 mana 送給別人", "", "<yellow>點一下：選擇玩家")),
                 e -> { click(p); openGift(p); });
         int boardN = plugin.commissions().board().size(), unclaimed = plugin.commissions().unclaimed(p.getUniqueId());
-        ItemStack board = icon(Material.OAK_HANGING_SIGN, 1, "<aqua>委託板",
+        ItemStack board = plugin.theme().button(p, "board", Material.OAK_HANGING_SIGN, 1, "<aqua>委託板",
                 List.of("<gray>需要幫忙？想幫別人？", "<gray>目前有 <white>" + boardN + "</white> 張委託",
                         unclaimed > 0 ? "<yellow>有 " + unclaimed + " 張委託物品待領取！" : "", "<yellow>點一下查看"));
         if (unclaimed > 0) Menu.glint(board);
         m.set(21, board, e -> { click(p); em.openBoard(p, 0); });
         List<Places.Work> mine = plugin.places().worksOf(p.getUniqueId());
-        m.set(22, icon(Material.PAINTING, 1, "<gold>我的作品",
+        m.set(22, plugin.theme().button(p, "works", Material.PAINTING, 1, "<gold>我的作品",
                 List.of("<gray>登記作品，別人來參觀留言時你會得到 mana", "<gray>已登記 <white>" + mine.size() + "/" + act().maxWorks(), "", "<yellow>點一下：管理作品")),
                 e -> { click(p); openWorks(p); });
         int nearby = plugin.places().worksNear(p.getLocation(), act().worksRadius(), p.getUniqueId()).size();
-        ItemStack visit = icon(Material.SPYGLASS, 1, "<aqua>參觀附近作品",
+        ItemStack visit = plugin.theme().button(p, "visit", Material.SPYGLASS, 1, "<aqua>參觀附近作品",
                 List.of("<gray>給附近的作品留言，作者會得到 mana", "<gray>附近 " + (int) act().worksRadius() + " 格內有 <white>" + nearby + "</white> 件作品", "", "<yellow>點一下：選擇作品"));
         if (nearby > 0) Menu.glint(visit);
         m.set(23, visit, e -> { click(p); openVisit(p); });
-        m.set(24, icon(Material.BOOK, 1, "<white>收到的留言", List.of("<gray>讀取中…")), e -> { click(p); openComments(p, 0); });
+        m.set(24, plugin.theme().button(p, "comments", Material.BOOK, 1, "<white>收到的留言", List.of("<gray>讀取中…")), e -> { click(p); openComments(p, 0); });
         act().unseenComments(p.getUniqueId()).thenAccept(n -> plugin.sync(() -> {
             if (!m.isOpenFor(p)) return;
-            ItemStack ic = icon(n > 0 ? Material.ENCHANTED_BOOK : Material.BOOK, Math.max(1, n), "<white>收到的留言",
+            ItemStack ic = plugin.theme().button(p, "comments", n > 0 ? Material.ENCHANTED_BOOK : Material.BOOK, Math.max(1, n), "<white>收到的留言",
                     List.of(n > 0 ? "<yellow>有 " + n + " 則新留言！" : "<gray>沒有新留言", "", "<yellow>點一下查看"));
             m.set(24, ic, e -> { click(p); openComments(p, 0); });
         }));
@@ -186,15 +186,15 @@ public final class ManaMenu {
         } else treeLore.add("<gold>所有祝福都已解鎖");
         treeLore.add("");
         treeLore.add("<yellow>點一下：捐獻 mana");
-        m.set(28, icon(Material.FLOWERING_AZALEA, 1, "<green>生命之樹", treeLore), e -> { click(p); openTree(p); });
-        m.set(29, icon(Material.SCAFFOLDING, 1, "<gold>社區工程",
+        m.set(28, plugin.theme().button(p, "tree", Material.OAK_SAPLING, 1, "<green>生命之樹", treeLore), e -> { click(p); openTree(p); });
+        m.set(29, plugin.theme().button(p, "projects", Material.SCAFFOLDING, 1, "<gold>社區工程",
                 List.of("<gray>全服一起蓋的公共建設", "<gray>捐物資、投入 mana，完工一起慶祝", "", "<yellow>點一下查看")),
                 e -> { click(p); em.openProjects(p); });
-        m.set(30, icon(Material.WRITABLE_BOOK, 1, "<white>mana 紀錄", List.of("<gray>所有收支", "", "<yellow>點一下查看")),
+        m.set(30, plugin.theme().button(p, "log", Material.WRITABLE_BOOK, 1, "<white>mana 紀錄", List.of("<gray>所有收支", "", "<yellow>點一下查看")),
                 e -> { click(p); openLog(p, 0); });
 
-        m.set(40, icon(Material.BARRIER, "<red>關閉"), e -> p.closeInventory());
-        m.border();
+        m.set(40, plugin.theme().button(p, "close", Material.BARRIER, "<red>關閉"), e -> p.closeInventory());
+        m.frame();
         m.open(p);
     }
 
@@ -203,7 +203,7 @@ public final class ManaMenu {
         MentorService.Pair mine = ms.of(p.getUniqueId());
         if (mine != null && "pending".equals(mine.status)) {
             String mentor = String.valueOf(Bukkit.getOfflinePlayer(mine.mentor).getName());
-            m.set(slot, Menu.glint(icon(Material.NAME_TAG, 1, "<gold>導師邀請",
+            m.set(slot, Menu.glint(plugin.theme().button(p, "mentor", Material.NAME_TAG, 1, "<gold>導師邀請",
                     List.of("<white>" + mentor + "<gray> 想當你的導師", "<gray>完成引導後你們都會得到 mana", "", "<yellow>點一下：接受"))),
                     e -> {
                         click(p);
@@ -222,7 +222,7 @@ public final class ManaMenu {
             List<String> lore = new ArrayList<>();
             lore.add("<gray>導師：<white>" + Bukkit.getOfflinePlayer(mine.mentor).getName());
             for (String s : ms.progress(mine, p).split("　")) lore.add("<gray>" + s);
-            m.set(slot, icon(Material.NAME_TAG, 1, "<gold>新手引導進度", lore));
+            m.set(slot, plugin.theme().button(p, "mentor", Material.NAME_TAG, 1, "<gold>新手引導進度", lore));
             return;
         }
         List<String> lore = new ArrayList<>();
@@ -236,7 +236,7 @@ public final class ManaMenu {
         if (mine != null) lore.add("<dark_gray>你自己已完成新手引導");
         lore.add("");
         lore.add("<yellow>點一下：邀請在線新手");
-        m.set(slot, icon(Material.NAME_TAG, 1, "<gold>導師", lore), e -> { click(p); openMentorPick(p); });
+        m.set(slot, plugin.theme().button(p, "mentor", Material.NAME_TAG, 1, "<gold>導師", lore), e -> { click(p); openMentorPick(p); });
     }
 
     // ======================================================================
@@ -245,7 +245,7 @@ public final class ManaMenu {
 
     private void openPlayerPicker(Player p, String title, Predicate<Player> filter, java.util.function.Function<Player, List<String>> loreFn,
                                   BiConsumer<Player, Player> onPick, String empty) {
-        Menu m = new Menu(6, title);
+        Menu m = new Menu(plugin, p, 6, title, Menu.SOCIAL);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         List<Pager.Entry> entries = new ArrayList<>();
         for (Player t : Bukkit.getOnlinePlayers()) {
@@ -253,7 +253,7 @@ public final class ManaMenu {
             entries.add(new Pager.Entry(head(t, "<white>" + t.getName(), loreFn.apply(t)), e -> { click(p); onPick.accept(p, t); }));
         }
         Pager.fill(m, entries, 0, pg -> {}, empty, null);
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -279,7 +279,7 @@ public final class ManaMenu {
     private void openGiftAmount(Player p, Player t) {
         PlayerData d = data(p);
         if (d == null) return;
-        Menu m = new Menu(3, "<dark_purple>送給 " + t.getName());
+        Menu m = new Menu(plugin, p, 3, "<dark_purple>送給 " + t.getName(), Menu.SOCIAL);
         m.header(plugin, p, () -> openGift(p));
         m.set(2, head(t, "<white>" + t.getName(), List.of("<gray>選擇要送的數量")));
         int slot = 11;
@@ -287,14 +287,14 @@ public final class ManaMenu {
             boolean ok = d.balance >= a;
             String name = (ok ? "<aqua>" : "<gray>") + "送 " + a + " mana";
             List<String> lore = List.of(ok ? "<yellow>點一下送出" : "<red>mana 不夠");
-            m.set(slot++, ok ? plugin.icons().mana((int) Math.min(a, 64), name, lore) : icon(Material.GRAY_DYE, (int) Math.min(a, 64), name, lore),
+            m.set(slot++, ok ? plugin.theme().mana(p, (int) Math.min(a, 64), name, lore) : icon(Material.GRAY_DYE, (int) Math.min(a, 64), name, lore),
                     e -> {
                         if (!t.isOnline()) { plugin.msg().send(p, "no-player", "name", t.getName()); openGift(p); return; }
                         if (act().gift(p, t, a, "")) Menu.success(p); else Menu.fail(p);
                         openGiftAmount(p, t);
                     });
         }
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -323,7 +323,7 @@ public final class ManaMenu {
         PlayerData d = data(p);
         if (d == null) return;
         LifeTree t = plugin.tree();
-        Menu m = new Menu(3, "<dark_green>生命之樹");
+        Menu m = new Menu(plugin, p, 3, "<dark_green>生命之樹", Menu.LIFE);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.LIFE));
         List<String> lore = new ArrayList<>();
         LifeTree.Stage cur = t.currentStage();
@@ -334,14 +334,14 @@ public final class ManaMenu {
         }
         lore.add("");
         lore.add("<dark_gray>養分來自歸土、捐獻與各種手續費");
-        m.set(2, icon(Material.FLOWERING_AZALEA, 1, "<green>生命之樹", lore));
+        m.set(2, plugin.theme().button(p, "tree", Material.OAK_SAPLING, 1, "<green>生命之樹", lore));
 
         int slot = 10;
         for (long a : DONATE_AMOUNTS) {
             boolean ok = d.balance >= a;
             String name = (ok ? "<green>" : "<gray>") + "捐 " + a + " mana";
             List<String> l = List.of(ok ? "<yellow>點一下捐獻" : "<red>mana 不夠");
-            m.set(slot++, ok ? plugin.icons().mana((int) Math.min(a, 64), name, l) : icon(Material.GRAY_DYE, (int) Math.min(a, 64), name, l),
+            m.set(slot++, ok ? plugin.theme().mana(p, (int) Math.min(a, 64), name, l) : icon(Material.GRAY_DYE, (int) Math.min(a, 64), name, l),
                     e -> { if (act().donate(p, a)) Menu.success(p); openTree(p); });
         }
         m.set(16, icon(Material.MOSS_BLOCK, 1, "<green>全部捐出（" + d.balance + "）", List.of("<yellow>Shift + 點擊 才會送出", "<gray>避免手滑")),
@@ -350,7 +350,7 @@ public final class ManaMenu {
                     if (act().donate(p, d.balance)) Menu.success(p);
                     openTree(p);
                 });
-        m.frame(Menu.LIFE);
+        m.frame();
         m.open(p);
     }
 
@@ -360,7 +360,7 @@ public final class ManaMenu {
 
     public void openWorks(Player p) {
         List<Places.Work> mine = new ArrayList<>(plugin.places().worksOf(p.getUniqueId()));
-        Menu m = new Menu(3, "<gold>我的作品");
+        Menu m = new Menu(plugin, p, 3, "<gold>我的作品", Menu.SOCIAL);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         int slot = 10;
         for (Places.Work w : mine) {
@@ -388,7 +388,7 @@ public final class ManaMenu {
                     click(p);
                     act().addWork(p, null, w -> { if (p.isOnline()) openWorks(p); });
                 });
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -396,7 +396,7 @@ public final class ManaMenu {
         PlayerData d = data(p);
         if (d == null) return;
         List<Places.Work> near = plugin.places().worksNear(p.getLocation(), act().worksRadius(), p.getUniqueId());
-        Menu m = new Menu(6, "<dark_aqua>附近的作品");
+        Menu m = new Menu(plugin, p, 6, "<dark_aqua>附近的作品", Menu.SOCIAL);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         List<Pager.Entry> entries = new ArrayList<>();
         for (Places.Work w : near) {
@@ -410,12 +410,12 @@ public final class ManaMenu {
             entries.add(new Pager.Entry(ic, e -> { if (!done) { click(p); openPresets(p, w); } }));
         }
         Pager.fill(m, entries, 0, pg -> {}, "附近 " + (int) act().worksRadius() + " 格內沒有別人的作品", "走到別人的作品旁再打開看看");
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
     private void openPresets(Player p, Places.Work w) {
-        Menu m = new Menu(3, "<dark_aqua>留言給「" + esc(w.name()) + "」");
+        Menu m = new Menu(plugin, p, 3, "<dark_aqua>留言給「" + esc(w.name()) + "」", Menu.SOCIAL);
         m.header(plugin, p, () -> openVisit(p));
         List<String> presets = plugin.getConfig().getStringList("sources.works.preset-comments");
         if (presets.isEmpty()) presets = DEFAULT_PRESETS;
@@ -427,7 +427,7 @@ public final class ManaMenu {
         }
         m.set(16, icon(Material.OAK_SIGN, 1, "<gray>想自己寫留言？",
                 List.of("<gray>輸入：<white>/mana comment " + Bukkit.getOfflinePlayer(w.owner()).getName() + " 留言內容")));
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -436,10 +436,10 @@ public final class ManaMenu {
     // ======================================================================
 
     public void openComments(Player p, int page) {
-        Menu m = new Menu(6, "<white>收到的留言");
+        Menu m = new Menu(plugin, p, 6, "<white>收到的留言", Menu.SOCIAL);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         m.set(31, icon(Material.HOPPER, "<gray>讀取中…"));
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
         act().comments(p.getUniqueId(), 200, true).thenAccept(list -> plugin.sync(() -> {
             if (!m.isOpenFor(p)) return;
@@ -452,10 +452,10 @@ public final class ManaMenu {
     }
 
     public void openLog(Player p, int page) {
-        Menu m = new Menu(6, "<white>mana 紀錄");
+        Menu m = new Menu(plugin, p, 6, "<white>mana 紀錄", Menu.LIFE);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.RECORDS));
         m.set(31, icon(Material.HOPPER, "<gray>讀取中…"));
-        m.frame(Menu.LIFE);
+        m.frame();
         m.open(p);
         act().ledger(p.getUniqueId(), 280).thenAccept(list -> plugin.sync(() -> {
             if (!m.isOpenFor(p)) return;

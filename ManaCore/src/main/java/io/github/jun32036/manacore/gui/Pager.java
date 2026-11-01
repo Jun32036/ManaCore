@@ -40,7 +40,7 @@ public final class Pager {
             if (idx < entries.size()) {
                 Entry e = entries.get(idx);
                 m.set(slots.get(i), e.icon(), e.action());
-            } else m.set(slots.get(i), Menu.filler(), null);
+            } else m.set(slots.get(i), m.filler(), null);
         }
         if (entries.isEmpty()) {
             m.set(slots.get(per / 2 - 4), Menu.icon(Material.STRUCTURE_VOID, 1, "<gray>" + emptyText, emptyHint == null ? List.of() : List.of("<dark_gray>" + emptyHint)));
@@ -48,10 +48,10 @@ public final class Pager {
         int cur = page;
         if (pages > 1) {
             m.set(SLOT_PAGE, Menu.icon(Material.PAPER, Math.max(1, Math.min(64, page + 1)), "<white>第 " + (page + 1) + " / " + pages + " 頁", List.of("<gray>共 " + entries.size() + " 項")));
-            if (page > 0) m.set(SLOT_PREV, Menu.icon(Material.SPECTRAL_ARROW, "<white>上一頁"), e -> openPage.accept(cur - 1));
-            else m.set(SLOT_PREV, Menu.filler(), null);
-            if (page < pages - 1) m.set(SLOT_NEXT, Menu.icon(Material.SPECTRAL_ARROW, "<white>下一頁"), e -> openPage.accept(cur + 1));
-            else m.set(SLOT_NEXT, Menu.filler(), null);
+            if (page > 0) m.set(SLOT_PREV, m.button("prev", Material.SPECTRAL_ARROW, 1, "<white>上一頁", List.of()), e -> openPage.accept(cur - 1));
+            else m.set(SLOT_PREV, m.filler(), null);
+            if (page < pages - 1) m.set(SLOT_NEXT, m.button("next", Material.SPECTRAL_ARROW, 1, "<white>下一頁", List.of()), e -> openPage.accept(cur + 1));
+            else m.set(SLOT_NEXT, m.filler(), null);
         }
     }
 }

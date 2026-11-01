@@ -116,10 +116,10 @@ public final class Dialogs {
         return "<green>" + "▮".repeat(filled) + "</green><dark_gray>" + "▮".repeat(width - filled) + "</dark_gray>";
     }
 
-    private DialogBody manaHeader(PlayerData d) {
+    private DialogBody manaHeader(Player p, PlayerData d) {
         long today = 0;
         for (Source s : Source.values()) if (s.earning) today += d.earned(s);
-        return item(plugin.icons().mana(1, "<aqua>mana", List.of()),
+        return item(plugin.theme().mana(p, 1, "<aqua>mana", List.of()),
                 "<aqua>你的 mana：<white><bold>" + d.balance + "</bold></white>　<gray>今天已得 <white>" + today + "</white></gray>"
                         + (plugin.mana().isAfk(d) ? "\n<red>你目前 AFK，暫時不會產生 mana</red>" : ""));
     }
@@ -141,7 +141,7 @@ public final class Dialogs {
                     && io.github.jun32036.manacore.economy.OrderService.countPlain(p, o.def.item()) >= o.def.amount()) deliverable++;
 
         List<DialogBody> body = new ArrayList<>();
-        body.add(manaHeader(d));
+        body.add(manaHeader(p, d));
         body.add(text("<gray>想做什麼？選一個分類。有 <yellow>★</yellow> 的表示有事情等你處理。</gray>"));
         List<ActionButton> b = new ArrayList<>();
         b.add(btn("<green>🌾 靠自己賺" + (deliverable > 0 ? " <yellow>★" + deliverable : ""), "<gray>生活手藝、圖鑑、城鎮訂單</gray>" + (deliverable > 0 ? "\n<yellow>有 " + deliverable + " 張訂單你現在就能交" : ""), W, (pl, r) -> openSelf(pl)));
@@ -173,7 +173,7 @@ public final class Dialogs {
         if (d == null) return;
         int open = 0;
         for (var o : plugin.orders().today()) if (!o.complete()) open++;
-        List<DialogBody> body = List.of(manaHeader(d),
+        List<DialogBody> body = List.of(manaHeader(p, d),
                 text("<gray>靠自己的雙手賺 mana：做同一件事越久收益越少，換著玩最划算。</gray>"));
         List<ActionButton> b = List.of(
                 btn("<green>生活手藝", "<gray>採集、種植、畜牧、釣魚、烹飪、建造的等級、被動加成與新鮮度", W, (pl, r) -> openSkills(pl)),
@@ -192,7 +192,7 @@ public final class Dialogs {
         MentorService.Pair pair = plugin.mentors().of(p.getUniqueId());
         boolean invite = pair != null && "pending".equals(pair.status);
         List<DialogBody> body = new ArrayList<>();
-        body.add(manaHeader(d));
+        body.add(manaHeader(p, d));
         body.add(text("<gray>和大家一起玩，收穫更多：感謝不花自己的 mana，由世界替你回報對方。</gray>"));
         List<ActionButton> b = new ArrayList<>();
         b.add(btn("<red>感謝", "<gray>感謝幫過你的人，對方得到 mana", W, (pl, r) -> openThanks(pl)));
@@ -211,14 +211,14 @@ public final class Dialogs {
         if (d == null) return;
         int lots = plugin.market().open().size(), returned = plugin.market().returnedCount(p.getUniqueId());
         boolean remote = p.hasPermission("manacore.altar.remote");
-        List<DialogBody> body = List.of(manaHeader(d),
-                text("<gray>祭壇用 mana 換物資（公定價）；市集向其他玩家買賣；煉金爐把多餘的物品換成等值的其他物品。</gray>"));
+        List<DialogBody> body = List.of(manaHeader(p, d),
+                text("<gray>祭壇用 mana 換物資；市集向其他玩家買賣；煉金爐把多餘的物品換成等值的其他物品。</gray>"));
         List<ActionButton> b = List.of(
-                btn("<aqua>生命祭壇", remote ? "<gray>用 mana 照公定價換物資，一組一組換（箱子介面）" : "<gray>要走到祭壇方塊旁右鍵開啟", W,
+                btn("<aqua>生命祭壇", remote ? "<gray>用 mana 照固定價格換物資，一組一組換（箱子介面）" : "<gray>要走到祭壇方塊旁右鍵開啟", W,
                         (pl, r) -> { if (remote) plugin.altar().open(pl); else notice(pl, "<aqua>生命祭壇", List.of(text("<gray>生命祭壇要親自走到祭壇方塊旁，<white>右鍵</white>開啟。</gray>")), back("<white>← 返回", () -> openTrade(pl))); }),
-                btn("<aqua>玩家市集 <gray>" + lots + " 批" + (returned > 0 ? " <yellow>★" + returned : ""), "<gray>公定價、不講價（箱子介面）" + (returned > 0 ? "\n<yellow>有 " + returned + " 批退回的物品待領取" : ""), W, (pl, r) -> plugin.marketMenu().open(pl, 0)),
+                btn("<aqua>玩家市集 <gray>" + lots + " 批" + (returned > 0 ? " <yellow>★" + returned : ""), "<gray>價格、不講價（箱子介面）" + (returned > 0 ? "\n<yellow>有 " + returned + " 批退回的物品待領取" : ""), W, (pl, r) -> plugin.marketMenu().open(pl, 0)),
                 btn("<light_purple>煉金爐 · 等價交換", "<gray>煉金值：<white>" + d.alchemy + "</white>（箱子介面）", W, (pl, r) -> plugin.alchemyMenu().open(pl, 0)),
-                btn("<white>價格怎麼算？", "<gray>價值表與公定價的說明", W, (pl, r) -> openPriceHelp(pl)));
+                btn("<white>價格怎麼算？", "<gray>價值表與價格的說明", W, (pl, r) -> openPriceHelp(pl)));
         show(p, "<aqua>◆ mana › 交易與兌換", body, null, b, 2, back("<white>← 返回主選單", () -> openHub(p)));
     }
 
@@ -228,8 +228,8 @@ public final class Dialogs {
         LifeTree t = plugin.tree();
         LifeTree.Stage cur = t.currentStage(), next = t.nextStage();
         long threshold = plugin.getConfig().getLong("decay.threshold", 500);
-        List<DialogBody> body = List.of(manaHeader(d),
-                item(Menu.icon(Material.FLOWERING_AZALEA, "<green>生命之樹"), "<green>生命之樹</green> <gray>階段：<white>" + (cur == null ? "種子" : cur.name()) + "</white>\n"
+        List<DialogBody> body = List.of(manaHeader(p, d),
+                item(Menu.icon(Material.OAK_SAPLING, "<green>生命之樹"), "<green>生命之樹</green> <gray>階段：<white>" + (cur == null ? "種子" : cur.name()) + "</white>\n"
                         + (next != null ? bar(t.total(), next.threshold(), 16) + " <gray>" + t.total() + " / " + next.threshold() + "（下一階段：" + next.name() + "）" : "<gold>所有祝福都已解鎖")),
                 text("<gray>mana 存超過 <white>" + threshold + "</white> 的部分每天歸土 " + Math.round(plugin.getConfig().getDouble("decay.rate", 0.05) * 100) + "% 回生命之樹；捐獻、手續費也會讓它成長。</gray>"));
         List<ActionButton> b = List.of(
@@ -252,7 +252,7 @@ public final class Dialogs {
         }
         if (!any) sb.append("<gray>今天還沒有收入，去做點什麼吧！</gray>\n");
         sb.append("<dark_gray>每天午夜重置</dark_gray>");
-        List<DialogBody> body = List.of(manaHeader(d), text(sb.toString()));
+        List<DialogBody> body = List.of(manaHeader(p, d), text(sb.toString()));
         List<ActionButton> b = List.of(
                 btn("<white>收支紀錄", "<gray>每一筆 mana 的來源與去處（箱子介面）", W, (pl, r) -> plugin.menu().openLog(pl, 0)),
                 btn("<green>手藝等級", "<gray>六種生活手藝的等級與被動", W, (pl, r) -> openSkills(pl)));
@@ -282,7 +282,7 @@ public final class Dialogs {
     public void openPriceHelp(Player p) {
         List<DialogBody> body = List.of(
                 text("<gray>全服有一張<white>價值表</white>：基礎物資的價值由服主設定，其他物品從合成、燒製、切石配方自動推算，取最便宜的做法。</gray>"),
-                text("<gray><white>市集</white>的公定價 = 價值 × 數量 ÷ 100，不能自訂，所以不講價、不比價。\n<white>煉金爐</white>用同一張表：投入物品換煉金值（損耗 " + plugin.alchemy().lossPercent() + "%），換出曾投入過的物品。煉金值不能換成 mana。\n<white>祭壇</white>的價格另外設定，建造等級高的人買建材有折扣。</gray>"));
+                text("<gray><white>市集</white>的價格 = 價值 × 數量 ÷ 100，不能自訂，所以不講價、不比價。\n<white>煉金爐</white>用同一張表：投入物品換煉金值（損耗 " + plugin.alchemy().lossPercent() + "%），換出曾投入過的物品。煉金值不能換成 mana。\n<white>祭壇</white>的價格另外設定，建造等級高的人買建材有折扣。</gray>"));
         notice(p, "<white>價格怎麼算？", body, back("<white>← 返回", () -> openTrade(p)));
     }
 
