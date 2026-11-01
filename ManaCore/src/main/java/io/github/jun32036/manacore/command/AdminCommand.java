@@ -24,7 +24,7 @@ import java.util.List;
 /** /manaadmin 管理指令 */
 public final class AdminCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("help", "give", "take", "event", "check", "altar", "landmark", "tree", "decay", "orders", "project", "value", "passive", "reload");
+    private static final List<String> SUBS = List.of("help", "give", "take", "event", "check", "altar", "landmark", "tree", "decay", "orders", "project", "value", "passive", "style", "pack", "reload");
 
     private final ManaCorePlugin plugin;
 
@@ -55,6 +55,18 @@ public final class AdminCommand implements TabExecutor {
                 }
             }
             case "project" -> project(s, a);
+            case "style" -> {
+                Player t = a.length > 0 ? Bukkit.getPlayerExact(a[0]) : null;
+                if (t == null) { s.sendMessage(Msg.mm("<gray>用法：/manaadmin style <玩家> on|off（手動切換自訂外觀，測試用）</gray>")); return true; }
+                boolean on = a.length < 2 || !a[1].equalsIgnoreCase("off");
+                plugin.pack().setStyled(t.getUniqueId(), on);
+                s.sendMessage(Msg.mm("<green><n> 的選單外觀：<v></green>", "n", t.getName(), "v", on ? "資源包樣式" : "原版"));
+            }
+            case "pack" -> {
+                var pk = plugin.pack();
+                s.sendMessage(Msg.mm("<green>介面資源包：<e>　網址 <u>　sha1 <h></green>", "e", pk.enabled() ? "啟用" : "停用", "u", String.valueOf(pk.url()), "h", pk.sha1()));
+                if (a.length > 0 && Bukkit.getPlayerExact(a[0]) != null) { pk.send(Bukkit.getPlayerExact(a[0])); s.sendMessage(Msg.mm("<gray>已重新送出資源包給 <n></gray>", "n", a[0])); }
+            }
             case "passive" -> {
                 Player t = a.length > 0 ? Bukkit.getPlayerExact(a[0]) : (s instanceof Player sp ? sp : null);
                 PlayerData d = t == null ? null : plugin.mana().get(t);
@@ -105,6 +117,8 @@ public final class AdminCommand implements TabExecutor {
                 "<white>project list | reset <id></white> <gray>社區工程（內容在 config.yml 的 projects）</gray>",
                 "<white>value [物品ID]</white> <gray>查價值表（煉金與市集共用）</gray>",
                 "<white>passive [玩家]</white> <gray>查看手藝等級與被動加成</gray>",
+                "<white>pack [玩家]</white> <gray>資源包狀態；指定玩家則重新送出</gray>",
+                "<white>style <玩家> on|off</white> <gray>手動切換自訂外觀（測試用）</gray>",
                 "<white>reload</white> <gray>重新讀取 config.yml</gray>"
         };
         for (String l : lines) s.sendMessage(Msg.mm(l));

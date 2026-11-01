@@ -70,7 +70,7 @@ public final class EconomyMenu {
         if (d == null) return;
         CraftService cs = plugin.craft();
         Passives pv = plugin.passives();
-        Menu m = new Menu(4, "<dark_green>生活手藝");
+        Menu m = new Menu(plugin, p, 4, "<dark_green>生活手藝", Menu.SELF);
         m.header(plugin, p, main(p));
         long cap = cs.perSkillCap();
         int slot = 10;
@@ -99,7 +99,7 @@ public final class EconomyMenu {
         int companions = plugin.coop().companions(p);
         double bonus = plugin.getConfig().getDouble("sources.craft.companion.bonus", 0.25);
         long total = plugin.mana().cap(Source.CRAFT);
-        m.set(13, icon(Material.KNOWLEDGE_BOOK, 1, "<green>手藝怎麼算？", List.of(
+        m.set(13, plugin.theme().button(p, "info", Material.KNOWLEDGE_BOOK, 1, "<green>手藝怎麼算？", List.of(
                 "<gray>點數 = 基礎 × <white>多樣性</white> × <white>結伴</white> × <white>新鮮度",
                 "<gray>每 " + (long) cs.pointsPerMana() + " 點換 1 mana",
                 "",
@@ -110,7 +110,7 @@ public final class EconomyMenu {
                 "",
                 "<gray>單一手藝每天最多 <white>" + cap + "</white>，合計 <white>" + (total > 0 ? total : "不限"),
                 "<gray>超過上限仍會累積經驗")));
-        m.frame(Menu.SELF);
+        m.frame();
         m.open(p);
     }
 
@@ -122,7 +122,7 @@ public final class EconomyMenu {
         PlayerData d = data(p);
         if (d == null) return;
         DexService dex = plugin.dex();
-        Menu m = new Menu(4, "<dark_aqua>圖鑑");
+        Menu m = new Menu(plugin, p, 4, "<dark_aqua>圖鑑", Menu.SELF);
         m.header(plugin, p, main(p));
         int slot = 10;
         int total = 0;
@@ -136,14 +136,14 @@ public final class EconomyMenu {
                     "", "<yellow>點一下：看收集到的")), e -> { click(p); openDexCategory(p, c, 0); });
         }
         long rem = plugin.mana().remaining(d, Source.DEX);
-        m.set(2, icon(Material.BOOK, 1, "<white>我的圖鑑：" + total + " 種", List.of(
+        m.set(2, plugin.theme().button(p, "dex", Material.BOOK, 1, "<white>我的圖鑑：" + total + " 種", List.of(
                 "<gray>第一次釣到、種出、做出、繁殖、討伐的東西",
                 "<gray>都會登錄進圖鑑並得到 mana（只算一次）",
                 "<gray>每個分類收集滿 " + plugin.getConfig().getInt("sources.dex.milestone-every", 10) + " 種再加碼",
                 "",
                 "<gray>今天圖鑑還能拿：<white>" + (rem < 0 ? "不限" : rem + " mana"),
                 "<dark_gray>刷同一樣東西一千次只算一次，嘗試新東西吧")));
-        m.frame(Menu.SELF);
+        m.frame();
         m.open(p);
     }
 
@@ -151,7 +151,7 @@ public final class EconomyMenu {
         PlayerData d = data(p);
         if (d == null) return;
         List<String> ids = plugin.dex().entries(d, c);
-        Menu m = new Menu(6, "<dark_aqua>圖鑑 · " + c.display + "（" + ids.size() + "）");
+        Menu m = new Menu(plugin, p, 6, "<dark_aqua>圖鑑 · " + c.display + "（" + ids.size() + "）", Menu.SELF);
         m.header(plugin, p, () -> openDex(p));
         List<Pager.Entry> entries = new ArrayList<>();
         for (String id : ids) {
@@ -166,7 +166,7 @@ public final class EconomyMenu {
             entries.add(new Pager.Entry(icon(mat != null && mat.isItem() ? mat : c.icon, 1, "<white>" + name, List.of("<dark_gray>" + esc(id))), null));
         }
         Pager.fill(m, entries, page, pg -> openDexCategory(p, c, pg), "還沒有登錄任何東西", "去試試新的東西吧！");
-        m.frame(Menu.SELF);
+        m.frame();
         m.open(p);
     }
 
@@ -178,7 +178,7 @@ public final class EconomyMenu {
         PlayerData d = data(p);
         if (d == null) return;
         OrderService os = plugin.orders();
-        Menu m = new Menu(4, "<gold>城鎮訂單 · 今天的需求");
+        Menu m = new Menu(plugin, p, 4, "<gold>城鎮訂單 · 今天的需求", Menu.SELF);
         m.header(plugin, p, main(p));
         int slot = 10;
         for (OrderService.Order o : os.today()) {
@@ -208,7 +208,7 @@ public final class EconomyMenu {
         }
         if (os.today().isEmpty()) m.set(13, icon(Material.STRUCTURE_VOID, 1, "<gray>今天沒有訂單", List.of("<dark_gray>服主還沒有設定訂單池")));
         long rem = plugin.mana().remaining(d, Source.ORDER);
-        m.set(2, icon(Material.BELL, 1, "<gold>城鎮訂單", List.of(
+        m.set(2, plugin.theme().button(p, "orders", Material.BELL, 1, "<gold>城鎮訂單", List.of(
                 "<gray>城鎮每天需要不同的東西，",
                 "<gray>交出你種的、釣的、煮的、挖的、做的，換 mana",
                 "<gray>整張訂單被大家交滿時，每位出過力的人",
@@ -216,7 +216,7 @@ public final class EconomyMenu {
                 "",
                 "<gray>今天訂單還能拿：<white>" + (rem < 0 ? "不限" : rem + " mana"),
                 "<dark_gray>每天午夜換新的需求")));
-        m.frame(Menu.SELF);
+        m.frame();
         m.open(p);
     }
 
@@ -228,7 +228,7 @@ public final class EconomyMenu {
         PlayerData d = data(p);
         if (d == null) return;
         CommissionService cs = plugin.commissions();
-        Menu m = new Menu(6, "<dark_aqua>委託板");
+        Menu m = new Menu(plugin, p, 6, "<dark_aqua>委託板", Menu.SOCIAL);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         long now = System.currentTimeMillis();
         List<Pager.Entry> entries = new ArrayList<>();
@@ -258,7 +258,7 @@ public final class EconomyMenu {
 
         List<String> tiers = new ArrayList<>();
         for (long t : cs.rewardTiers()) tiers.add(String.valueOf(t));
-        m.set(2, icon(Material.KNOWLEDGE_BOOK, 1, "<green>委託板怎麼用？", List.of(
+        m.set(2, plugin.theme().button(p, "info", Material.KNOWLEDGE_BOOK, 1, "<green>委託板怎麼用？", List.of(
                 "<white>物品委託<gray>：把想要的物品拿在手上，點右邊的「發布」",
                 "<white>服務委託<gray>：輸入 <white>/mana request service 酬謝 說明",
                 "<gray>  例：/mana request service 10 幫我蓋屋頂",
@@ -283,7 +283,7 @@ public final class EconomyMenu {
                         unclaimed > 0 ? "<yellow>有 " + unclaimed + " 張完成的委託物品待領取！" : "<gray>沒有待領取的物品", "", "<yellow>點一下查看"));
         if (unclaimed > 0) Menu.glint(mine);
         m.set(5, mine, e -> { click(p); openMyCommissions(p, 0); });
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -296,7 +296,7 @@ public final class EconomyMenu {
     }
 
     private void openPostAmount(Player p, Material mat) {
-        Menu m = new Menu(3, "<dark_aqua>徵求多少個？");
+        Menu m = new Menu(plugin, p, 3, "<dark_aqua>徵求多少個？", Menu.SOCIAL);
         m.header(plugin, p, () -> openBoard(p, 0));
         m.set(2, icon(mat, 1, "<white>" + tr(mat), List.of("<gray>選擇需要的數量")));
         int slot = 10;
@@ -307,7 +307,7 @@ public final class EconomyMenu {
             m.set(slot++, icon(mat, Math.min(a, mat.getMaxStackSize()), "<white>" + a + " 個", List.of("<yellow>點一下：選擇酬謝")),
                     e -> { click(p); openPostReward(p, mat, amount); });
         }
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -315,7 +315,7 @@ public final class EconomyMenu {
         PlayerData d = data(p);
         if (d == null) return;
         CommissionService cs = plugin.commissions();
-        Menu m = new Menu(3, "<dark_aqua>酬謝多少 mana？");
+        Menu m = new Menu(plugin, p, 3, "<dark_aqua>酬謝多少 mana？", Menu.SOCIAL);
         m.header(plugin, p, () -> openPostAmount(p, mat));
         m.set(2, icon(mat, Math.min(amount, mat.getMaxStackSize()), "<white>徵求 " + tr(mat) + " ×" + amount, List.of("<gray>選擇酬謝")));
         int slot = 11;
@@ -325,16 +325,16 @@ public final class EconomyMenu {
             boolean ok = d.balance >= r + fee;
             String name = (ok ? "<aqua>" : "<gray>") + "酬謝 " + r + " mana";
             List<String> lore = List.of("<gray>手續費 " + fee + "（流入生命之樹）", "<gray>合計扣 <white>" + (r + fee), "", ok ? "<yellow>點一下：發布" : "<red>mana 不夠");
-            m.set(slot++, ok ? plugin.icons().mana((int) Math.min(64, r), name, lore) : icon(Material.GRAY_DYE, (int) Math.min(64, r), name, lore),
+            m.set(slot++, ok ? plugin.theme().mana(p, (int) Math.min(64, r), name, lore) : icon(Material.GRAY_DYE, (int) Math.min(64, r), name, lore),
                     e -> { if (cs.postItem(p, mat, amount, r)) { Menu.success(p); p.closeInventory(); } else Menu.fail(p); });
         }
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
     public void openMyCommissions(Player p, int page) {
         CommissionService cs = plugin.commissions();
-        Menu m = new Menu(6, "<gold>我的委託");
+        Menu m = new Menu(plugin, p, 6, "<gold>我的委託", Menu.SOCIAL);
         m.header(plugin, p, () -> openBoard(p, 0));
         List<Pager.Entry> entries = new ArrayList<>();
         for (CommissionService.Commission c : cs.mine(p.getUniqueId())) {
@@ -367,7 +367,7 @@ public final class EconomyMenu {
             }));
         }
         Pager.fill(m, entries, page, pg -> openMyCommissions(p, pg), "沒有進行中的委託", null);
-        m.frame(Menu.SOCIAL);
+        m.frame();
         m.open(p);
     }
 
@@ -377,7 +377,7 @@ public final class EconomyMenu {
 
     public void openProjects(Player p) {
         ProjectService ps = plugin.projects();
-        Menu m = new Menu(4, "<gold>社區工程");
+        Menu m = new Menu(plugin, p, 4, "<gold>社區工程", Menu.LIFE);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.LIFE));
         int slot = 10;
         for (ProjectService.Project pr : ps.all()) {
@@ -392,12 +392,12 @@ public final class EconomyMenu {
                     e -> { click(p); openProject(p, pr.id); });
         }
         if (slot == 10) m.set(13, icon(Material.STRUCTURE_VOID, 1, "<gray>目前沒有社區工程", List.of("<dark_gray>服主可以在 config.yml 的 projects 新增")));
-        m.set(2, icon(Material.SCAFFOLDING, 1, "<gold>社區工程", List.of(
+        m.set(2, plugin.theme().button(p, "projects", Material.SCAFFOLDING, 1, "<gold>社區工程", List.of(
                 "<gray>全服一起蓋的公共建設",
                 "<gray>捐物資：每 " + plugin.getConfig().getInt("sources.project.items-per-mana", 32) + " 個換 1 mana（有每日上限）",
                 "<gray>投入 mana：讓存著的 mana 變成看得見的建設",
                 "<gray>完工時每位出過力的人都有完工獎勵")));
-        m.frame(Menu.LIFE);
+        m.frame();
         m.open(p);
     }
 
@@ -405,7 +405,7 @@ public final class EconomyMenu {
         PlayerData d = data(p);
         ProjectService.Project pr = plugin.projects().get(id);
         if (d == null || pr == null) return;
-        Menu m = new Menu(6, "<gold>" + esc(pr.name));
+        Menu m = new Menu(plugin, p, 6, "<gold>" + esc(pr.name), Menu.LIFE);
         m.header(plugin, p, () -> openProjects(p));
         List<String> info = new ArrayList<>();
         if (!pr.description.isEmpty()) info.add("<gray>" + esc(pr.description));
@@ -438,20 +438,20 @@ public final class EconomyMenu {
         }
         Pager.fill(m, entries, 0, pg -> {}, "這項工程不需要物資", null);
         if (pr.manaGoal > 0) {
-            m.set(46, plugin.icons().mana(1, "<aqua>mana：" + pr.mana + "/" + pr.manaGoal, List.of(bar(pr.mana / (double) Math.max(1, pr.manaGoal), 12))));
+            m.set(46, plugin.theme().mana(p, 1, "<aqua>mana：" + pr.mana + "/" + pr.manaGoal, List.of(bar(pr.mana / (double) Math.max(1, pr.manaGoal), 12))));
             int s = 47;
             for (long a : INVEST_AMOUNTS) {
                 boolean ok = d.balance >= a && !pr.done && pr.mana < pr.manaGoal;
                 String name = (ok ? "<aqua>" : "<gray>") + "投入 " + a + " mana";
                 List<String> lore = List.of(ok ? "<yellow>點一下投入" : pr.done ? "<gray>已完工" : "<red>不能投入");
-                m.set(s++, ok ? plugin.icons().mana((int) Math.min(64, a), name, lore) : icon(Material.GRAY_DYE, (int) Math.min(64, a), name, lore),
+                m.set(s++, ok ? plugin.theme().mana(p, (int) Math.min(64, a), name, lore) : icon(Material.GRAY_DYE, (int) Math.min(64, a), name, lore),
                         e -> {
                             ProjectService.Project cur = plugin.projects().get(id);
                             if (cur != null && plugin.projects().invest(p, cur, a)) { Menu.success(p); openProject(p, id); } else Menu.fail(p);
                         });
             }
         }
-        m.frame(Menu.LIFE);
+        m.frame();
         m.open(p);
     }
 }

@@ -44,15 +44,39 @@ public final class Menu implements InventoryHolder {
     /** 不能點的空格一律用深色玻璃擋住 */
     public static final Material FILLER = Material.BLACK_STAINED_GLASS_PANE;
 
-    public static ItemStack filler() {
+    public static ItemStack darkFiller() {
         return icon(FILLER, " ");
     }
 
     private final Inventory inv;
     private final Map<Integer, Consumer<InventoryClickEvent>> actions = new HashMap<>();
+    private final ManaCorePlugin plugin;
+    private final Player player;
+    private final Material accent;
+    private final boolean styled;
 
-    public Menu(int rows, String titleMiniMessage) {
-        this.inv = Bukkit.createInventory(this, rows * 9, Msg.mm(titleMiniMessage));
+    /**
+     * @param accent 分區顏色：沒有資源包時是標題列玻璃片的顏色，有資源包時決定背景的標題橫幅顏色
+     */
+    public Menu(ManaCorePlugin plugin, Player p, int rows, String titleMiniMessage, Material accent) {
+        this.plugin = plugin;
+        this.player = p;
+        this.accent = accent;
+        this.styled = plugin.theme().styled(p);
+        this.inv = Bukkit.createInventory(this, rows * 9, plugin.theme().title(p, rows, accent, titleMiniMessage));
+    }
+
+    public boolean styled() {
+        return styled;
+    }
+
+    /** 功能按鈕：有資源包用圖示磁磚，否則用原版物品 */
+    public ItemStack button(String key, Material fallback, int amount, String name, List<String> lore) {
+        return plugin.theme().button(player, key, fallback, amount, name, lore);
+    }
+
+    public ItemStack filler() {
+        return plugin.theme().filler(player);
     }
 
     @Override
@@ -76,34 +100,32 @@ public final class Menu implements InventoryHolder {
     }
 
     /**
-     * 把所有還是空的格子擋起來：標題列用分區顏色的玻璃片，其餘一律深色玻璃。
-     * 先放內容再呼叫。
+     * 把所有還是空的格子擋起來：有資源包時用透明圖示（背景本身就是深色面板）；
+     * 沒有資源包時標題列用分區顏色的玻璃片，其餘一律深色玻璃。先放內容再呼叫。
      */
-    public Menu frame(Material accent) {
+    public Menu frame() {
         ItemStack a = icon(accent, " "), f = filler();
         for (int i = 0; i < inv.getSize(); i++) {
             if (inv.getItem(i) != null) continue;
-            inv.setItem(i, i < 9 ? a : f);
+            inv.setItem(i, styled ? f : (i < 9 ? a : f));
         }
         return this;
     }
 
-    public Menu border() {
-        return frame(INFO);
-    }
-
     /** 標題列：返回（可省略）、你的 mana、關閉 */
     public Menu header(ManaCorePlugin plugin, Player p, Runnable back) {
-        if (back != null) set(0, icon(Material.ARROW, "<white>返回", "<gray>回上一頁"), e -> { click(p); back.run(); });
+        if (back != null) set(0, button("back", Material.ARROW, 1, "<white>返回", List.of("<gray>回上一頁")), e -> { click(p); back.run(); });
         PlayerData d = plugin.mana().get(p);
-        if (d != null) set(4, plugin.icons().mana(1, "<aqua>你的 mana：<white>" + d.balance, List.of("<gray>mana 是拿來用的，不是拿來存的")));
-        set(8, icon(Material.BARRIER, "<red>關閉"), e -> p.closeInventory());
+        if (d != null) set(4, plugin.theme().mana(p, 1, "<aqua>你的 mana：<white>" + d.balance, List.of("<gray>mana 是拿來用的，不是拿來存的")));
+        set(8, button("close", Material.BARRIER, 1, "<red>關閉", List.of()), e -> p.closeInventory());
         return this;
     }
 
-    /** 分區標籤：有名字的玻璃片 */
+    /** 分區標籤：沒有資源包時是有名字的玻璃片，有資源包時是分區的圖示磁磚 */
     public Menu label(int slot, Material pane, String text) {
-        return set(slot, icon(pane, text));
+        if (!styled) return set(slot, icon(pane, text));
+        String key = pane == SELF ? "hub_self" : pane == SOCIAL ? "hub_social" : pane == LIFE ? "hub_life" : pane == ALCHEMY ? "alchemy" : "info";
+        return set(slot, button(key, pane, 1, text, List.of()));
     }
 
     public void open(Player p) {

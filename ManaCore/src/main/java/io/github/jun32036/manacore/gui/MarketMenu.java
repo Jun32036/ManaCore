@@ -37,10 +37,10 @@ public final class MarketMenu {
             plugin.msg().raw(p, "<gray>市集目前沒有開放。</gray>");
             return;
         }
-        Menu m = new Menu(6, "<dark_aqua>玩家市集 · 公定價");
+        Menu m = new Menu(plugin, p, 6, "<dark_aqua>玩家市集 · 公定價", Menu.LIFE);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.TRADE));
 
-        m.set(2, icon(Material.KNOWLEDGE_BOOK, 1, "<green>市集怎麼用？", List.of(
+        m.set(2, plugin.theme().button(p, "info", Material.KNOWLEDGE_BOOK, 1, "<green>市集怎麼用？", List.of(
                 "<gray>把多餘的東西掛出來賣給其他玩家",
                 "<gray>價格由全服價值表決定，<white>不講價、不比價",
                 "<gray>賣出時手續費 " + Math.round(ms.feeRate() * 100) + "% 流入生命之樹",
@@ -61,14 +61,14 @@ public final class MarketMenu {
             lore.add("");
             lore.add("<yellow>點一下：整疊上架");
         }
-        ItemStack sellIcon = held == null || held.getType().isAir() ? icon(Material.CHEST, 1, "<aqua>上架主手物品", lore)
+        ItemStack sellIcon = held == null || held.getType().isAir() ? plugin.theme().button(p, "sell", Material.CHEST, 1, "<aqua>上架主手物品", lore)
                 : icon(held.getType(), Math.max(1, held.getAmount()), "<aqua>上架主手物品", lore);
         if (price > 0) Menu.glint(sellIcon);
         m.set(6, sellIcon, e -> { if (ms.list(p, heldSlot)) Menu.success(p); else Menu.fail(p); open(p, page); });
 
         int returned = ms.returnedCount(p.getUniqueId());
         int mineN = ms.mine(p.getUniqueId()).size();
-        ItemStack mineIcon = icon(Material.ENDER_CHEST, Math.max(1, Math.min(64, mineN)), "<gold>我的攤位",
+        ItemStack mineIcon = plugin.theme().button(p, "stall", Material.ENDER_CHEST, Math.max(1, Math.min(64, mineN)), "<gold>我的攤位",
                 List.of("<gray>掛著的：<white>" + mineN, returned > 0 ? "<yellow>有 " + returned + " 批退回的物品待領取！" : "<gray>沒有待領取的物品", "", "<yellow>點一下查看"));
         if (returned > 0) Menu.glint(mineIcon);
         m.set(5, mineIcon, e -> { Menu.click(p); openMine(p, 0); });
@@ -91,13 +91,13 @@ public final class MarketMenu {
             }));
         }
         Pager.fill(m, entries, page, pg -> open(p, pg), "市集上還沒有東西", "把物品拿在手上，點上面的「上架」");
-        m.frame(Menu.LIFE);
+        m.frame();
         m.open(p);
     }
 
     public void openMine(Player p, int page) {
         MarketService ms = plugin.market();
-        Menu m = new Menu(6, "<gold>我的攤位");
+        Menu m = new Menu(plugin, p, 6, "<gold>我的攤位", Menu.LIFE);
         m.header(plugin, p, () -> open(p, 0));
         List<Pager.Entry> entries = new ArrayList<>();
         for (MarketService.Lot l : ms.mine(p.getUniqueId())) {
@@ -117,7 +117,7 @@ public final class MarketMenu {
             }));
         }
         Pager.fill(m, entries, page, pg -> openMine(p, pg), "你沒有掛任何東西", null);
-        m.frame(Menu.LIFE);
+        m.frame();
         m.open(p);
     }
 }

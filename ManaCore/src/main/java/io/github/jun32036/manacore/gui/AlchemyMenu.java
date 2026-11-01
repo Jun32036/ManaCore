@@ -30,10 +30,10 @@ public final class AlchemyMenu {
             plugin.msg().raw(p, "<gray>煉金爐目前沒有開放。</gray>");
             return;
         }
-        Menu m = new Menu(6, "<dark_purple>煉金爐 · 等價交換");
+        Menu m = new Menu(plugin, p, 6, "<dark_purple>煉金爐 · 等價交換", Menu.ALCHEMY);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.TRADE));
 
-        m.set(2, icon(Material.AMETHYST_SHARD, 1, "<light_purple>煉金值：<white>" + d.alchemy, List.of(
+        m.set(2, plugin.theme().button(p, "alchemy", Material.AMETHYST_SHARD, 1, "<light_purple>煉金值：<white>" + d.alchemy, List.of(
                 "<gray>投入多餘的物品換成煉金值，",
                 "<gray>再換出<white>曾經投入過</white>的任何物品",
                 "<gray>投入時損耗 " + al.lossPercent() + "%，換出不再損耗",
@@ -57,7 +57,7 @@ public final class AlchemyMenu {
             lore.add("<yellow>點一下：投入這一疊");
             lore.add("<yellow>Shift 點：投入背包裡全部同種物品");
         }
-        ItemStack depositIcon = held == null || held.getType().isAir() ? icon(Material.HOPPER, 1, "<light_purple>投入物品", lore)
+        ItemStack depositIcon = held == null || held.getType().isAir() ? plugin.theme().button(p, "deposit", Material.HOPPER, 1, "<light_purple>投入物品", lore)
                 : icon(held.getType(), Math.max(1, held.getAmount()), "<light_purple>投入物品", lore);
         if (hv > 0) Menu.glint(depositIcon);
         m.set(6, depositIcon, e -> {
@@ -87,7 +87,7 @@ public final class AlchemyMenu {
             }));
         }
         Pager.fill(m, entries, page, pg -> open(p, pg), "還沒學會任何物品", "把物品拿在手上，點上面的「投入物品」");
-        m.frame(Menu.ALCHEMY);
+        m.frame();
         m.open(p);
     }
 }

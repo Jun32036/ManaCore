@@ -130,15 +130,20 @@ public final class AltarMenu implements Listener {
         else openHome(p, d);
     }
 
-    private Inventory create(Holder h) {
-        Inventory inv = Bukkit.createInventory(h, 54, Msg.mm(plugin.getConfig().getString("altar.title", "<dark_green>生命祭壇 · 公定價")));
+    private Inventory create(Holder h, Player p) {
+        Inventory inv = Bukkit.createInventory(h, 54, plugin.theme().title(p, 6, Menu.LIFE, plugin.getConfig().getString("altar.title", "<dark_green>生命祭壇 · 公定價")));
         h.inv = inv;
         return inv;
     }
 
+    /** 把空格擋起來（有資源包用透明圖示，否則深色玻璃） */
+    private void fillEmpty(Inventory inv, Player p) {
+        for (int i = 0; i < inv.getSize(); i++) if (inv.getItem(i) == null) inv.setItem(i, i < 9 && !plugin.theme().styled(p) ? Menu.icon(Menu.LIFE, " ") : plugin.theme().filler(p));
+    }
+
     private void openHome(Player p, PlayerData d) {
         Holder h = new Holder();
-        Inventory inv = create(h);
+        Inventory inv = create(h, p);
         int slot = 10;
         for (Category c : categories) {
             if (slot > 34) break;
@@ -156,7 +161,8 @@ public final class AltarMenu implements Listener {
             h.bySlot.put(slot, c);
             slot++;
         }
-        fillInfo(inv, h, d);
+        fillInfo(inv, h, d, p);
+        fillEmpty(inv, p);
         p.openInventory(inv);
     }
 
@@ -165,17 +171,18 @@ public final class AltarMenu implements Listener {
         h.category = c;
         int pages = Math.max(1, (c.offers().size() + PAGE_SIZE - 1) / PAGE_SIZE);
         h.page = Math.max(0, Math.min(page, pages - 1));
-        Inventory inv = create(h);
+        Inventory inv = create(h, p);
         int from = h.page * PAGE_SIZE;
         for (int i = from; i < Math.min(c.offers().size(), from + PAGE_SIZE); i++) {
             Offer o = c.offers().get(i);
             inv.setItem(i - from, offerIcon(o, c, p));
             h.bySlot.put(i - from, o);
         }
-        if (categories.size() > 1) inv.setItem(SLOT_BACK, Menu.icon(Material.ARROW, "<white>返回分類"));
-        if (h.page > 0) inv.setItem(SLOT_PREV, Menu.icon(Material.PAPER, 1, "<white>上一頁", List.of("<gray>第 " + h.page + "/" + pages + " 頁")));
-        if (h.page < pages - 1) inv.setItem(SLOT_NEXT, Menu.icon(Material.PAPER, 1, "<white>下一頁", List.of("<gray>第 " + (h.page + 2) + "/" + pages + " 頁")));
-        fillInfo(inv, h, d);
+        if (categories.size() > 1) inv.setItem(SLOT_BACK, plugin.theme().button(p, "back", Material.ARROW, 1, "<white>返回分類", List.of()));
+        if (h.page > 0) inv.setItem(SLOT_PREV, plugin.theme().button(p, "prev", Material.PAPER, 1, "<white>上一頁", List.of("<gray>第 " + h.page + "/" + pages + " 頁")));
+        if (h.page < pages - 1) inv.setItem(SLOT_NEXT, plugin.theme().button(p, "next", Material.PAPER, 1, "<white>下一頁", List.of("<gray>第 " + (h.page + 2) + "/" + pages + " 頁")));
+        fillInfo(inv, h, d, p);
+        fillEmpty(inv, p);
         p.openInventory(inv);
     }
 
@@ -204,8 +211,8 @@ public final class AltarMenu implements Listener {
         return it;
     }
 
-    private void fillInfo(Inventory inv, Holder h, PlayerData d) {
-        inv.setItem(SLOT_BALANCE, plugin.icons().mana(1, "<aqua>你的 mana：<white>" + d.balance, List.of("<gray>mana 是拿來用的，不是拿來存的")));
+    private void fillInfo(Inventory inv, Holder h, PlayerData d, Player p) {
+        inv.setItem(SLOT_BALANCE, plugin.theme().mana(p, 1, "<aqua>你的 mana：<white>" + d.balance, List.of("<gray>mana 是拿來用的，不是拿來存的")));
 
         LifeTree tree = plugin.tree();
         LifeTree.Stage next = tree.nextStage();
@@ -214,7 +221,7 @@ public final class AltarMenu implements Listener {
         lore.add("<gray>目前階段：<white>" + (cur == null ? "種子" : cur.name()));
         lore.add("<gray>累積：<white>" + tree.total() + (next == null ? "" : "</white> / " + next.threshold() + "（下一階段：" + next.name() + "）"));
         lore.add("<yellow>捐獻：/mana → 生命之樹");
-        inv.setItem(SLOT_TREE, Menu.icon(Material.FLOWERING_AZALEA, 1, "<green>生命之樹", lore));
+        inv.setItem(SLOT_TREE, plugin.theme().button(p, "tree", Material.OAK_SAPLING, 1, "<green>生命之樹", lore));
 
         if (plugin.getConfig().getBoolean("sources.offering.enabled", true) && !offerings.isEmpty()) {
             ItemStack o = new ItemStack(Material.HONEY_BOTTLE);
@@ -251,7 +258,7 @@ public final class AltarMenu implements Listener {
 
         if (slot == SLOT_OFFERING) {
             offer(p, d);
-            fillInfo(h.inv, h, d);
+            fillInfo(h.inv, h, d, p);
             return;
         }
         if (h.category != null) {
@@ -266,7 +273,7 @@ public final class AltarMenu implements Listener {
         } else if (target instanceof Offer o) {
             int lots = e.isShiftClick() ? 5 : 1; // Shift：一次買 5 組
             for (int i = 0; i < lots; i++) if (!buy(p, o, h.category == null ? o.price() : priceFor(p, o, h.category))) break;
-            fillInfo(h.inv, h, d);
+            fillInfo(h.inv, h, d, p);
         }
     }
 

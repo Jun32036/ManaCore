@@ -564,6 +564,23 @@ menu:
   # false：全部用箱子介面。對話框開啟時，舊版客戶端的玩家可用 /mana chest 開箱子版主選單
   dialogs: true
 
+# ---------------- 介面資源包 ----------------
+# 選單的自訂外觀（深色面板、圖示磁磚、重新上色的按鈕與提示框）。玩家進入時會被詢問是否安裝；
+# 沒安裝的人看到原版物品的版本，功能完全一樣。
+resource-pack:
+  enabled: true
+  # 強制安裝（拒絕就被踢出）。建議 false
+  required: false
+  prompt: '<aqua>生生不息</aqua> 的介面資源包：安裝後選單會有自己的樣式。不安裝也能玩。'
+  # 自己放到網路空間時填網址（例如 https://example.com/manacore-pack.zip），留空則用下面的內建伺服器
+  url: ''
+  serve:
+    enabled: true
+    port: 25580
+    # 玩家連線時下載資源包用的主機名稱或 IP：正式服請改成對外的網址（例如 mc.example.com），
+    # 主機商若另外分配連接埠也要在 port 改成對外的那個
+    public-host: localhost
+
 icons:
   # 代表 mana 的藍色寶石圖示（自訂材質的頭顱，不需要資源包）。
   # 留空 = 用內建的藍色寶石；填 none = 改用鑽石；也可以貼上其他頭顱的材質值（minecraft-heads.com 的 Value）
@@ -747,7 +764,6 @@ altar:
         grass_block:    { material: GRASS_BLOCK,    amount: 64, price: 8 }
         oak_leaves:     { material: OAK_LEAVES,     amount: 64, price: 6 }
         azalea:         { material: AZALEA,         amount: 8,  price: 6 }
-        poppy:          { material: POPPY,          amount: 16, price: 3 }
     tools:
       name: 工具與功能方塊
       icon: IRON_PICKAXE

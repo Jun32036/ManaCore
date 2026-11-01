@@ -271,13 +271,26 @@ def render(name, page):
         img.alpha_composite(part, ((ox + dst[0]) * SCALE, (oy + dst[1]) * SCALE))
     blit((0, 0, 176, 17 + rows * 18), (0, 0))
     blit((0, 126, 176, 222), (0, 17 + rows * 18))
-    # 標題
-    draw_text(img, ox + 8, oy + 6, parse_component(page['title']), default=(64, 64, 64), shadow=False)
+    # 標題（資源包樣式：標題裡的背景字元 → 畫背景面板蓋住箱子）
+    title_parts = parse_component(page['title'])
+    styled = False
+    for t, _ in title_parts:
+        for ch in t:
+            code = ord(ch)
+            if 0xE200 <= code < 0xE200 + 20 and PACK:
+                ri, ai = divmod(code - 0xE200, 5)
+                acc = ['self', 'social', 'life', 'alchemy', 'info'][ai]
+                bg = Image.open(os.path.join(PACK, f'bg_{ri + 3}_{acc}.png')).convert('RGBA')
+                bg = bg.resize((bg.width * SCALE, bg.height * SCALE), Image.NEAREST)
+                img.alpha_composite(bg, (ox * SCALE, oy * SCALE)); styled = True
+    title_parts = [(''.join(c for c in t if not (0xE100 <= ord(c) < 0xE300)), col) for t, col in title_parts]
+    draw_text(img, ox + 8, oy + 6, title_parts, default=(64, 64, 64), shadow=False)
     draw_text(img, ox + 8, oy + gh - 94, [('物品欄', None)], default=(64, 64, 64), shadow=False)
     hover = HOVER.get(name)
     def draw_slot(slot, sx, sy):
         if not slot: return
-        ic = icon_for(slot, 16 * SCALE)
+        ic = styled_icon(slot, 16 * SCALE) if styled else None
+        if ic is None: ic = icon_for(slot, 16 * SCALE)
         if ic is None: return
         if slot.get('glint'): ic = glint(ic)
         img.alpha_composite(ic, ((ox + sx) * SCALE, (oy + sy) * SCALE))
@@ -330,6 +343,26 @@ def render(name, page):
             if n == 0 and len(lines) > 1: y += 2
     img.convert('RGB').save(os.path.join(OUT, name + '.png'))
     print('saved', name)
+
+# ---- 資源包樣式（styled 模式）----
+PACK = os.environ.get('PACKDIR')  # packgen 的預覽資料夾（bg_*.png、icon_*.png）
+ICON_BY_NAME = {'生活手藝': 'skills', '圖鑑': 'dex', '城鎮訂單': 'orders', '煉金爐 · 等價交換': 'alchemy', '煉金值': 'alchemy', '生命祭壇': 'altar', '玩家市集': 'market',
+    '感謝': 'thanks', '贈與 mana': 'gift', '委託板': 'board', '我的作品': 'works', '參觀附近作品': 'visit', '收到的留言': 'comments', '導師': 'mentor', '導師邀請': 'mentor',
+    '生命之樹': 'tree', '社區工程': 'projects', 'mana 紀錄': 'log', '今天的 mana': 'today', '怎麼得到 mana？': 'help', '關閉': 'close', '返回': 'back', '返回分類': 'back',
+    '上一頁': 'prev', '下一頁': 'next', '我的攤位': 'stall', '我的委託': 'mine', '投入物品': 'deposit', '上架主手物品': 'sell', '發布物品委託': 'request',
+    '市集怎麼用？': 'info', '委託板怎麼用？': 'info', '手藝怎麼算？': 'info', '我的圖鑑': 'dex', ' ': 'blank', '全部捐出': 'tree'}
+def styled_icon(slot, size):
+    if not PACK: return None
+    if slot['name'] == 'player_head': key = 'mana'
+    elif slot['name'] == 'paper':
+        nm = ''.join(t for t, _ in parse_component(slot.get('displayName'))) if slot.get('displayName') else ''
+        key = ICON_BY_NAME.get(nm) or next((v for k, v in ICON_BY_NAME.items() if k and nm.startswith(k)), None)
+        if key is None and nm.startswith('你的 mana'): key = 'mana'
+        if key is None: return None
+    else: return None
+    if key == 'blank': return Image.new('RGBA', (size, size), (0, 0, 0, 0))
+    p = os.path.join(PACK, 'icon_' + key + '.png')
+    return Image.open(p).convert('RGBA').resize((size, size), Image.LANCZOS) if os.path.exists(p) else None
 
 HOVER = {'main': 13, 'skills': 11, 'dex': 2, 'orders': 10, 'alchemy': 6, 'market': 10, 'board': 10, 'projects': 10, 'project': 10, 'altar_home': 10, 'altar_stone': 2}
 pages = json.load(open(sys.argv[1]))
