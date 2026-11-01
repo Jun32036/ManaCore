@@ -246,7 +246,7 @@ public final class ManaMenu {
     private void openPlayerPicker(Player p, String title, Predicate<Player> filter, java.util.function.Function<Player, List<String>> loreFn,
                                   BiConsumer<Player, Player> onPick, String empty) {
         Menu m = new Menu(6, title);
-        m.header(plugin, p, () -> openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         List<Pager.Entry> entries = new ArrayList<>();
         for (Player t : Bukkit.getOnlinePlayers()) {
             if (t.equals(p) || !filter.test(t)) continue;
@@ -324,7 +324,7 @@ public final class ManaMenu {
         if (d == null) return;
         LifeTree t = plugin.tree();
         Menu m = new Menu(3, "<dark_green>生命之樹");
-        m.header(plugin, p, () -> openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.LIFE));
         List<String> lore = new ArrayList<>();
         LifeTree.Stage cur = t.currentStage();
         lore.add("<gray>階段：<white>" + (cur == null ? "種子" : cur.name()) + "<gray>　累積：<white>" + t.total());
@@ -361,7 +361,7 @@ public final class ManaMenu {
     public void openWorks(Player p) {
         List<Places.Work> mine = new ArrayList<>(plugin.places().worksOf(p.getUniqueId()));
         Menu m = new Menu(3, "<gold>我的作品");
-        m.header(plugin, p, () -> openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         int slot = 10;
         for (Places.Work w : mine) {
             if (slot > 13) break;
@@ -397,7 +397,7 @@ public final class ManaMenu {
         if (d == null) return;
         List<Places.Work> near = plugin.places().worksNear(p.getLocation(), act().worksRadius(), p.getUniqueId());
         Menu m = new Menu(6, "<dark_aqua>附近的作品");
-        m.header(plugin, p, () -> openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         List<Pager.Entry> entries = new ArrayList<>();
         for (Places.Work w : near) {
             String owner = String.valueOf(Bukkit.getOfflinePlayer(w.owner()).getName());
@@ -437,7 +437,7 @@ public final class ManaMenu {
 
     public void openComments(Player p, int page) {
         Menu m = new Menu(6, "<white>收到的留言");
-        m.header(plugin, p, () -> openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         m.set(31, icon(Material.HOPPER, "<gray>讀取中…"));
         m.frame(Menu.SOCIAL);
         m.open(p);
@@ -453,7 +453,7 @@ public final class ManaMenu {
 
     public void openLog(Player p, int page) {
         Menu m = new Menu(6, "<white>mana 紀錄");
-        m.header(plugin, p, () -> openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.RECORDS));
         m.set(31, icon(Material.HOPPER, "<gray>讀取中…"));
         m.frame(Menu.LIFE);
         m.open(p);

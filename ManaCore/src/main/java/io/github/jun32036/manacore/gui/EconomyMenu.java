@@ -58,7 +58,7 @@ public final class EconomyMenu {
     }
 
     private Runnable main(Player p) {
-        return () -> plugin.menu().openMain(p);
+        return () -> plugin.openCategory(p, Dialogs.SELF);
     }
 
     // ======================================================================
@@ -229,7 +229,7 @@ public final class EconomyMenu {
         if (d == null) return;
         CommissionService cs = plugin.commissions();
         Menu m = new Menu(6, "<dark_aqua>委託板");
-        m.header(plugin, p, main(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.SOCIAL));
         long now = System.currentTimeMillis();
         List<Pager.Entry> entries = new ArrayList<>();
         for (CommissionService.Commission c : cs.board()) {
@@ -378,7 +378,7 @@ public final class EconomyMenu {
     public void openProjects(Player p) {
         ProjectService ps = plugin.projects();
         Menu m = new Menu(4, "<gold>社區工程");
-        m.header(plugin, p, main(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.LIFE));
         int slot = 10;
         for (ProjectService.Project pr : ps.all()) {
             if (slot > 16) break;

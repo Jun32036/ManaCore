@@ -560,6 +560,9 @@ market:
 menu:
   # 蹲下（Shift）時按「交換手持物品」鍵（預設 F）開啟 /mana 選單
   sneak-swap-opens-menu: true
+  # true：主選單與表單用伺服器對話框（真正的按鈕、滑桿、文字輸入，需要 1.21.6 以上的客戶端）；
+  # false：全部用箱子介面。對話框開啟時，舊版客戶端的玩家可用 /mana chest 開箱子版主選單
+  dialogs: true
 
 icons:
   # 代表 mana 的藍色寶石圖示（自訂材質的頭顱，不需要資源包）。

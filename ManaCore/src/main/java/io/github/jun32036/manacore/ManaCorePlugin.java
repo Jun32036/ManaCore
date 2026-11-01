@@ -16,6 +16,7 @@ import io.github.jun32036.manacore.economy.MarketService;
 import io.github.jun32036.manacore.economy.Passives;
 import io.github.jun32036.manacore.economy.ValueTable;
 import io.github.jun32036.manacore.gui.AlchemyMenu;
+import io.github.jun32036.manacore.gui.Dialogs;
 import io.github.jun32036.manacore.gui.MarketMenu;
 import io.github.jun32036.manacore.economy.CoopService;
 import io.github.jun32036.manacore.economy.CraftService;
@@ -50,6 +51,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     private MarketService market;
     private Passives passives;
     private AlchemyMenu alchemyMenu;
+    private Dialogs dialogs;
     private MarketMenu marketMenu;
     private EconomyMenu econMenu;
     private CraftService craft;
@@ -93,6 +95,7 @@ public final class ManaCorePlugin extends JavaPlugin {
         alchemy = new AlchemyService(this);
         passives = new Passives(this);
         alchemyMenu = new AlchemyMenu(this);
+        dialogs = new Dialogs(this);
         marketMenu = new MarketMenu(this);
         altar = new AltarMenu(this);
         altar.reload();
@@ -229,6 +232,19 @@ public final class ManaCorePlugin extends JavaPlugin {
     public MarketService market() { return market; }
     public Passives passives() { return passives; }
     public AlchemyMenu alchemyMenu() { return alchemyMenu; }
+    public Dialogs dialogs() { return dialogs; }
+
+    /** 開主選單：對話框版（預設）或箱子版 */
+    public void openHub(Player p) {
+        if (dialogs.enabled()) dialogs.openHub(p);
+        else menu.openMain(p);
+    }
+
+    /** 箱子頁面的「返回」：回到對話框的分類頁（或箱子版主選單） */
+    public void openCategory(Player p, String category) {
+        if (dialogs.enabled()) dialogs.openCategory(p, category);
+        else menu.openMain(p);
+    }
     public MarketMenu marketMenu() { return marketMenu; }
     public EconomyMenu econMenu() { return econMenu; }
     public CraftService craft() { return craft; }

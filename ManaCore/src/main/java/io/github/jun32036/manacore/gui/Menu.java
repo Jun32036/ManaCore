@@ -41,6 +41,12 @@ public final class Menu implements InventoryHolder {
     public static final Material LIFE = Material.LIGHT_BLUE_STAINED_GLASS_PANE;
     public static final Material ALCHEMY = Material.PURPLE_STAINED_GLASS_PANE;
     public static final Material INFO = Material.GRAY_STAINED_GLASS_PANE;
+    /** 不能點的空格一律用深色玻璃擋住 */
+    public static final Material FILLER = Material.BLACK_STAINED_GLASS_PANE;
+
+    public static ItemStack filler() {
+        return icon(FILLER, " ");
+    }
 
     private final Inventory inv;
     private final Map<Integer, Consumer<InventoryClickEvent>> actions = new HashMap<>();
@@ -69,13 +75,15 @@ public final class Menu implements InventoryHolder {
         return set(slot, item, null);
     }
 
-    /** 外框填滿指定顏色的玻璃片（只填還是空的格子，所以先放內容再呼叫） */
-    public Menu frame(Material pane) {
-        ItemStack p = icon(pane, " ");
-        int rows = inv.getSize() / 9;
+    /**
+     * 把所有還是空的格子擋起來：標題列用分區顏色的玻璃片，其餘一律深色玻璃。
+     * 先放內容再呼叫。
+     */
+    public Menu frame(Material accent) {
+        ItemStack a = icon(accent, " "), f = filler();
         for (int i = 0; i < inv.getSize(); i++) {
-            int r = i / 9, c = i % 9;
-            if ((r == 0 || r == rows - 1 || c == 0 || c == 8) && inv.getItem(i) == null) inv.setItem(i, p);
+            if (inv.getItem(i) != null) continue;
+            inv.setItem(i, i < 9 ? a : f);
         }
         return this;
     }

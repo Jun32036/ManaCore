@@ -38,7 +38,7 @@ public final class MarketMenu {
             return;
         }
         Menu m = new Menu(6, "<dark_aqua>玩家市集 · 公定價");
-        m.header(plugin, p, () -> plugin.menu().openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.TRADE));
 
         m.set(2, icon(Material.KNOWLEDGE_BOOK, 1, "<green>市集怎麼用？", List.of(
                 "<gray>把多餘的東西掛出來賣給其他玩家",

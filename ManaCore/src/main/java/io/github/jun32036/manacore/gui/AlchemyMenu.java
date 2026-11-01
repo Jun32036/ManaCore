@@ -31,7 +31,7 @@ public final class AlchemyMenu {
             return;
         }
         Menu m = new Menu(6, "<dark_purple>煉金爐 · 等價交換");
-        m.header(plugin, p, () -> plugin.menu().openMain(p));
+        m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.TRADE));
 
         m.set(2, icon(Material.AMETHYST_SHARD, 1, "<light_purple>煉金值：<white>" + d.alchemy, List.of(
                 "<gray>投入多餘的物品換成煉金值，",

@@ -40,7 +40,8 @@
 | `economy/ProjectService` | 社區工程：捐物資、投入 mana、完工指令 |
 | `gui/EconomyMenu` | 以上功能的選單頁 |
 | `gui/Icons` | 1.4.0：代表 mana 的藍色寶石圖示（自訂材質頭顱） |
-| `gui/Pager` | 1.5.0：翻頁清單；`Menu` 新增統一標題列與分區邊框 |
+| `gui/Dialogs` | 1.5.0：對話框介面（主選單、分類頁、感謝／贈與／捐獻／服務委託表單、說明頁）；需要 1.21.6 以上客戶端 |
+| `gui/Pager` | 1.5.0：翻頁清單；`Menu` 新增統一標題列、空格一律深色玻璃 |
 | `gui/AlchemyMenu`、`gui/MarketMenu` | 1.5.0：煉金爐、玩家市集 |
 | `economy/ValueTable` | 1.5.0：價值表（基礎值＋由配方推算，有單元測試） |
 | `economy/AlchemyService` | 煉金爐：投入／換出、學會的物品、損耗 |
@@ -53,7 +54,7 @@
 
 ## 指令
 
-玩家：`/mana`（開選單）、`/mana status`、`/mana skills|dex|orders|board|projects|alchemy|market`、`/mana sell`（整疊上架）、`/mana request <數量> <酬謝>`、`/mana request service <酬謝> <說明>`、`/thanks [玩家] [原因]`（不加玩家開選單）、`/mana give|donate|tree|work set/list/remove|comment|comments|mentor|log`
+玩家：`/mana`（對話框主選單）、`/mana chest`（箱子版主選單）、`/mana status`、`/mana skills|dex|orders|board|projects|alchemy|market`、`/mana sell`（整疊上架）、`/mana request <數量> <酬謝>`、`/mana request service <酬謝> <說明>`、`/thanks [玩家] [原因]`（不加玩家開選單）、`/mana give|donate|tree|work set/list/remove|comment|comments|mentor|log`
 管理員：`/manaadmin give|take|event|check|altar set/remove|landmark add/remove/list|tree [set]|decay|orders [reroll]|project list/reset|value [物品]|reload`、`/altar`
 
 ## 1.2.0 的反濫用規則（config 中有預設值，舊設定檔不必改）
@@ -69,7 +70,7 @@
 - 1.0.0：mana 來源、每日上限、歸土、生命之樹、祭壇、作品、導師、管理指令
 - 1.1.0：`/mana` 圖形選單、預設留言、`Actions` 共用邏輯
 - 1.2.0：修正聊天 mana 被洗頻與群聊灌水、同一對玩家的每日/每週上限
-- 1.5.0：GUI 統一版面（標題列、分區邊框、翻頁、可做的項目會發光）；煉金爐（等價交換）；玩家市集（公定價）；手藝被動加成；祭壇 Shift 一次買五組
+- 1.5.0：主選單與表單改為伺服器對話框（按鈕、滑桿、文字輸入，分層：主選單 → 分類 → 功能；`menu.dialogs` 可關閉，`/mana chest` 開箱子版）；箱子頁面統一版面（標題列、翻頁、可做的項目發光、空格深色玻璃）；煉金爐（等價交換）；玩家市集（公定價）；手藝被動加成；祭壇 Shift 一次買五組
 - 1.4.0：Shift+F 開啟選單；mana 圖示改為藍色寶石（聊天前綴 ◆）；達成原版成就得到大量 mana；祭壇改為分類翻頁、128 種常用方塊一組一組換（`altar.shop`，舊的 `altar.items` 不再使用）
 - 1.3.0：經濟系統。「生產收成」改為六種生活手藝（新鮮度、多樣性、結伴加成、等級）；新增圖鑑、城鎮訂單、委託板、合作挑戰、社區工程；祭壇新增特別物品；可選關閉村民交易
 
@@ -91,6 +92,7 @@
 - [ ] `/mana orders`：顯示 6 張訂單；交貨扣物品、加 mana；交滿一張時全服公告並發完成獎勵；跨日（或 `/manaadmin orders reroll`）換新
 - [ ] 委託板：A 發布物品委託（扣酬謝＋手續費，生命之樹增加）→ B 交貨 → A 收到物品、B 收到酬謝與助人 mana；A 離線時改為「我的委託」領取；服務委託的接下、確認、取消、放棄
 - [ ] 社區工程：捐物資、投入 mana、完工指令執行
+- [ ] 1.5.0 對話框：`/mana` 或蹲下按 F 開啟主選單，五個分類都能進出；感謝（文字輸入）、贈與（滑桿＋留言）、捐獻（滑桿）、發布服務委託（文字＋酬謝選項）、導師邀請與接受；箱子頁面按「返回」會回到對話框分類頁。**機器人無法開啟對話框，這部分只有編譯與伺服器端不報錯的驗證，請務必真人測。**
 - [ ] 1.5.0：煉金爐投入／換出、市集上架／購買／收回、種植 Lv 高時多拿一份、建造 Lv 高時祭壇折扣（機器人已驗證，請用真人再走一次介面）
 - [ ] 1.4.0：蹲下按 F 開啟選單；達成成就（例如 `/advancement grant 玩家 only minecraft:story/mine_diamond`）得到 mana；`/altar` 顯示分類、可翻頁購買；mana 圖示顯示為藍色寶石
 - [ ] 兩人一起種田：結伴加成生效（主選單頭像顯示「身邊有 1 位夥伴」）
