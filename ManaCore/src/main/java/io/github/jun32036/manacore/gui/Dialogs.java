@@ -212,13 +212,13 @@ public final class Dialogs {
         int lots = plugin.market().open().size(), returned = plugin.market().returnedCount(p.getUniqueId());
         boolean remote = p.hasPermission("manacore.altar.remote");
         List<DialogBody> body = List.of(manaHeader(p, d),
-                text("<gray>祭壇用 mana 換物資（公定價）；市集向其他玩家買賣；煉金爐把多餘的物品換成等值的其他物品。</gray>"));
+                text("<gray>祭壇用 mana 換物資；市集向其他玩家買賣；煉金爐把多餘的物品換成等值的其他物品。</gray>"));
         List<ActionButton> b = List.of(
-                btn("<aqua>生命祭壇", remote ? "<gray>用 mana 照公定價換物資，一組一組換（箱子介面）" : "<gray>要走到祭壇方塊旁右鍵開啟", W,
+                btn("<aqua>生命祭壇", remote ? "<gray>用 mana 照固定價格換物資，一組一組換（箱子介面）" : "<gray>要走到祭壇方塊旁右鍵開啟", W,
                         (pl, r) -> { if (remote) plugin.altar().open(pl); else notice(pl, "<aqua>生命祭壇", List.of(text("<gray>生命祭壇要親自走到祭壇方塊旁，<white>右鍵</white>開啟。</gray>")), back("<white>← 返回", () -> openTrade(pl))); }),
-                btn("<aqua>玩家市集 <gray>" + lots + " 批" + (returned > 0 ? " <yellow>★" + returned : ""), "<gray>公定價、不講價（箱子介面）" + (returned > 0 ? "\n<yellow>有 " + returned + " 批退回的物品待領取" : ""), W, (pl, r) -> plugin.marketMenu().open(pl, 0)),
+                btn("<aqua>玩家市集 <gray>" + lots + " 批" + (returned > 0 ? " <yellow>★" + returned : ""), "<gray>價格、不講價（箱子介面）" + (returned > 0 ? "\n<yellow>有 " + returned + " 批退回的物品待領取" : ""), W, (pl, r) -> plugin.marketMenu().open(pl, 0)),
                 btn("<light_purple>煉金爐 · 等價交換", "<gray>煉金值：<white>" + d.alchemy + "</white>（箱子介面）", W, (pl, r) -> plugin.alchemyMenu().open(pl, 0)),
-                btn("<white>價格怎麼算？", "<gray>價值表與公定價的說明", W, (pl, r) -> openPriceHelp(pl)));
+                btn("<white>價格怎麼算？", "<gray>價值表與價格的說明", W, (pl, r) -> openPriceHelp(pl)));
         show(p, "<aqua>◆ mana › 交易與兌換", body, null, b, 2, back("<white>← 返回主選單", () -> openHub(p)));
     }
 
@@ -282,7 +282,7 @@ public final class Dialogs {
     public void openPriceHelp(Player p) {
         List<DialogBody> body = List.of(
                 text("<gray>全服有一張<white>價值表</white>：基礎物資的價值由服主設定，其他物品從合成、燒製、切石配方自動推算，取最便宜的做法。</gray>"),
-                text("<gray><white>市集</white>的公定價 = 價值 × 數量 ÷ 100，不能自訂，所以不講價、不比價。\n<white>煉金爐</white>用同一張表：投入物品換煉金值（損耗 " + plugin.alchemy().lossPercent() + "%），換出曾投入過的物品。煉金值不能換成 mana。\n<white>祭壇</white>的價格另外設定，建造等級高的人買建材有折扣。</gray>"));
+                text("<gray><white>市集</white>的價格 = 價值 × 數量 ÷ 100，不能自訂，所以不講價、不比價。\n<white>煉金爐</white>用同一張表：投入物品換煉金值（損耗 " + plugin.alchemy().lossPercent() + "%），換出曾投入過的物品。煉金值不能換成 mana。\n<white>祭壇</white>的價格另外設定，建造等級高的人買建材有折扣。</gray>"));
         notice(p, "<white>價格怎麼算？", body, back("<white>← 返回", () -> openTrade(p)));
     }
 

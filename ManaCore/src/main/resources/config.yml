@@ -546,7 +546,7 @@ alchemy:
   # 只能換出曾經投入過的物品（像 ProjectE 要先學會）
   learn-required: true
 
-# ---------------- 玩家市集（公定價） ----------------
+# ---------------- 玩家市集 ----------------
 market:
   enabled: true
   # 賣出手續費（流入生命之樹）
@@ -633,13 +633,13 @@ life-tree:
       commands:
         - 'say 生命之樹結出果實，全服感謝每一位玩家！'
 
-# ---------------- 生命祭壇（公定價兌換所） ----------------
+# ---------------- 生命祭壇（兌換所） ----------------
 # 祭壇只「換出」物資，一組一組換（amount 是一次換到的數量，price 是一次的 mana）。
 # 1.4.0 起分成分類（altar.shop），每個分類一頁；舊版的 altar.items（含 slot）已不再使用。
 # 品項選自生存與建築玩家最常用的方塊：深板岩、凝灰岩、方解石、石磚、石英、砂岩、各種木材、
 # 混凝土、陶土、羊毛、玻璃與光源、銅，以及農作、工具與特別物品。價格大致反映生存取得的難度。
 altar:
-  title: '<dark_green>生命祭壇 · 公定價'
+  title: '<dark_green>生命祭壇'
   # 這些分類享「建造」手藝等級折扣（見 sources.craft.passives.build）
   discount-categories: [stone, wood, color, glass_light]
   shop:

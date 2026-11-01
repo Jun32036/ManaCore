@@ -35,11 +35,13 @@ def put_text(path, text):
 
 # ---------------- 箱子背景 ----------------
 def background(rows, accent):
-    W, H = 176, 114 + rows * 18
+    # 只蓋住上方的選單區（標題列＋格子），下方的背包區保留原版介面
+    W, H = 176, 17 + rows * 18
     img = Image.new('RGBA', (W, H), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((0, 0, W - 1, H - 1), radius=5, fill=BASE, outline=BORDER)
-    d.rounded_rectangle((1, 1, W - 2, H - 2), radius=4, outline=(40, 46, 64))
+    d.rounded_rectangle((0, 0, W - 1, H + 6), radius=5, fill=BASE, outline=BORDER)   # 下緣超出畫布 → 底邊是直的，和背包區相接
+    d.rounded_rectangle((1, 1, W - 2, H + 5), radius=4, outline=(40, 46, 64))
+    d.line((0, H - 1, W - 1, H - 1), fill=BORDER)
     # 標題橫幅
     head = blend(BASE, accent, 0.22)
     d.rounded_rectangle((1, 1, W - 2, 15), radius=4, fill=head)
@@ -52,17 +54,6 @@ def background(rows, accent):
             x, y = 8 + c * 18, 18 + r * 18
             fill = SLOT_DIM if r == 0 else SLOT
             d.rounded_rectangle((x - 1, y - 1, x + 16, y + 16), radius=2, fill=fill, outline=SLOT_B if r else blend(SLOT_B, BASE, 0.4))
-    # 物品欄區
-    top = 17 + rows * 18
-    d.rounded_rectangle((4, top + 2, W - 5, top + 13), radius=3, fill=TEXT_STRIP)
-    for r in range(3):
-        for c in range(9):
-            x, y = 8 + c * 18, (H - 82) + r * 18
-            d.rounded_rectangle((x - 1, y - 1, x + 16, y + 16), radius=2, fill=SLOT_DIM, outline=blend(SLOT_B, BASE, 0.5))
-    for c in range(9):
-        x, y = 8 + c * 18, H - 24
-        d.rounded_rectangle((x - 1, y - 1, x + 16, y + 16), radius=2, fill=SLOT_DIM, outline=blend(SLOT_B, BASE, 0.5))
-    d.line((6, H - 28, W - 7, H - 28), fill=(40, 46, 64))
     return img
 
 # ---------------- 圖示磁磚 ----------------

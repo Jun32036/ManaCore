@@ -122,7 +122,7 @@ public final class ManaMenu {
                     e -> { click(p); plugin.alchemyMenu().open(p, 0); });
         boolean remote = p.hasPermission("manacore.altar.remote");
         m.set(14, plugin.theme().button(p, "altar", Material.LODESTONE, 1, "<aqua>生命祭壇",
-                List.of("<gray>用 mana 照公定價換物資，一組一組換", "",
+                List.of("<gray>用 mana 照固定價格換物資，一組一組換", "",
                         remote ? "<yellow>點一下：開啟兌換介面" : "<gray>請到祭壇方塊旁<white>右鍵</white>開啟")),
                 e -> {
                     click(p);
@@ -132,7 +132,7 @@ public final class ManaMenu {
         if (plugin.market().enabled()) {
             int lots = plugin.market().open().size(), returned = plugin.market().returnedCount(p.getUniqueId());
             ItemStack mk = plugin.theme().button(p, "market", Material.EMERALD_BLOCK, 1, "<aqua>玩家市集",
-                    List.of("<gray>向其他玩家買東西、把多餘的賣掉", "<gray>公定價、不講價", "<gray>目前有 <white>" + lots + "</white> 批商品",
+                    List.of("<gray>向其他玩家買東西、把多餘的賣掉", "<gray>價格、不講價", "<gray>目前有 <white>" + lots + "</white> 批商品",
                             returned > 0 ? "<yellow>有 " + returned + " 批退回的物品待領取！" : "", "<yellow>點一下查看"));
             if (returned > 0) Menu.glint(mk);
             m.set(15, mk, e -> { click(p); plugin.marketMenu().open(p, 0); });

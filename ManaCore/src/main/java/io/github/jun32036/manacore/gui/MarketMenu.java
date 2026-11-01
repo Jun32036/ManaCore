@@ -16,7 +16,7 @@ import java.util.List;
 import static io.github.jun32036.manacore.gui.Menu.icon;
 import static io.github.jun32036.manacore.gui.Menu.tr;
 
-/** 玩家市集（公定價）的介面 */
+/** 玩家市集的介面 */
 public final class MarketMenu {
 
     private final ManaCorePlugin plugin;
@@ -37,7 +37,7 @@ public final class MarketMenu {
             plugin.msg().raw(p, "<gray>市集目前沒有開放。</gray>");
             return;
         }
-        Menu m = new Menu(plugin, p, 6, "<dark_aqua>玩家市集 · 公定價", Menu.LIFE);
+        Menu m = new Menu(plugin, p, 6, "<dark_aqua>玩家市集", Menu.LIFE);
         m.header(plugin, p, () -> plugin.openCategory(p, Dialogs.TRADE));
 
         m.set(2, plugin.theme().button(p, "info", Material.KNOWLEDGE_BOOK, 1, "<green>市集怎麼用？", List.of(
@@ -46,7 +46,7 @@ public final class MarketMenu {
                 "<gray>賣出時手續費 " + Math.round(ms.feeRate() * 100) + "% 流入生命之樹",
                 "<gray>掛 " + plugin.getConfig().getLong("market.expire-days", 7) + " 天沒賣出會退回",
                 "",
-                "<dark_gray>帶附魔／自訂名稱的物品沒有公定價，",
+                "<dark_gray>帶附魔／自訂名稱的物品沒有固定價格，",
                 "<dark_gray>請用委託板或贈與")));
 
         int heldSlot = p.getInventory().getHeldItemSlot();
@@ -54,10 +54,10 @@ public final class MarketMenu {
         long price = held == null || !AlchemyService.isPlain(held) ? 0 : ms.price(held.getType(), held.getAmount());
         List<String> lore = new ArrayList<>();
         if (held == null || held.getType().isAir()) lore.add("<gray>先把要賣的物品拿在主手上");
-        else if (price <= 0) { lore.add("<gray>主手：" + tr(held.getType()) + " ×" + held.getAmount()); lore.add("<red>這個物品沒有公定價"); }
+        else if (price <= 0) { lore.add("<gray>主手：" + tr(held.getType()) + " ×" + held.getAmount()); lore.add("<red>這個物品沒有固定價格"); }
         else {
             lore.add("<gray>主手：<white>" + tr(held.getType()) + " ×" + held.getAmount());
-            lore.add("<gray>公定價 <white>" + price + "</white> mana，賣出實收 <white>" + (price - ms.fee(price)));
+            lore.add("<gray>價格 <white>" + price + "</white> mana，賣出實收 <white>" + (price - ms.fee(price)));
             lore.add("");
             lore.add("<yellow>點一下：整疊上架");
         }
@@ -103,7 +103,7 @@ public final class MarketMenu {
         for (MarketService.Lot l : ms.mine(p.getUniqueId())) {
             boolean returned = "returned".equals(l.status);
             List<String> ll = new ArrayList<>();
-            ll.add("<gray>公定價：<aqua>" + l.price + " mana");
+            ll.add("<gray>價格：<aqua>" + l.price + " mana");
             ll.add(returned ? "<yellow>已過期退回，等你領取" : "<gray>掛著等人購買");
             ll.add("");
             ll.add(returned ? "<yellow>點一下：領回" : "<red>Shift + 右鍵：收回");

@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 生命祭壇：照公定價用 mana 換出物資（一組一組換），分類翻頁；也收少量季節祭品。
+ * 生命祭壇：照固定價格用 mana 換出物資（一組一組換），分類翻頁；也收少量季節祭品。
  * 祭壇只「換出」，不收購一般物資，避免玩家蓋刷物農場把物資轉成 mana（那是城鎮訂單與社區工程的事）。
  *
  * 設定：altar.shop.<分類>.items.<品項> { material, amount, price }。1.4.0 以前的 altar.items（含 slot）已不再使用。
@@ -52,7 +52,7 @@ public final class AltarMenu implements Listener {
         this.plugin = plugin;
     }
 
-    /** 全部品項（給其他功能查公定價） */
+    /** 全部品項（給其他功能查價格） */
     public List<Offer> offers() {
         List<Offer> out = new ArrayList<>();
         for (Category c : categories) out.addAll(c.offers());
@@ -131,7 +131,9 @@ public final class AltarMenu implements Listener {
     }
 
     private Inventory create(Holder h, Player p) {
-        Inventory inv = Bukkit.createInventory(h, 54, plugin.theme().title(p, 6, Menu.LIFE, plugin.getConfig().getString("altar.title", "<dark_green>生命祭壇 · 公定價")));
+        // 舊設定檔的標題可能還帶著「 · 公定價」，一律去掉
+        String title = plugin.getConfig().getString("altar.title", "<dark_green>生命祭壇").replace(" · 公定價", "").replace("公定價", "");
+        Inventory inv = Bukkit.createInventory(h, 54, plugin.theme().title(p, 6, Menu.LIFE, title));
         h.inv = inv;
         return inv;
     }
@@ -201,8 +203,8 @@ public final class AltarMenu implements Listener {
         it.editMeta(meta -> {
             List<Component> lore = new ArrayList<>();
             lore.add(plain(c.name(), NamedTextColor.DARK_GRAY));
-            if (price < o.price()) lore.add(plain("公定價：" + price + " mana（建造等級折扣，原價 " + o.price() + "）", NamedTextColor.GREEN));
-            else lore.add(plain("公定價：" + price + " mana", NamedTextColor.GREEN));
+            if (price < o.price()) lore.add(plain("價格：" + price + " mana（建造等級折扣，原價 " + o.price() + "）", NamedTextColor.GREEN));
+            else lore.add(plain("價格：" + price + " mana", NamedTextColor.GREEN));
             lore.add(plain("一次換 " + o.amount() + " 個", NamedTextColor.GRAY));
             lore.add(Component.empty());
             lore.add(plain("點一下兌換一組，Shift 點兌換五組", NamedTextColor.YELLOW));
