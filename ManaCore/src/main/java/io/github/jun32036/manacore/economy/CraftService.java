@@ -191,12 +191,14 @@ public final class CraftService {
         long n = (long) Math.floor(acc / ppm);
         if (n <= 0) {
             d.craftPoints.put(s, acc);
+            plugin.mana().saveCraft(d, s); // 點數與經驗隨時寫回，意外關服不會遺失
             return;
         }
         n = Math.min(n, skillRem);
         if (totalRem > 0) n = Math.min(n, totalRem);
         long got = plugin.mana().earn(p, Source.CRAFT, n, Component.text("生活手藝・" + s.display), s.key + "：" + what, true);
-        acc -= n * ppm;
+        // 只扣掉真的換成 mana 的點數；AFK 等原因沒換到時，點數留著下次再換（例如建造延後入帳時剛好 AFK）
+        acc -= got * ppm;
         d.craftPoints.put(s, acc);
         plugin.mana().addSkillDaily(d, s, got);
         plugin.mana().saveCraft(d, s);

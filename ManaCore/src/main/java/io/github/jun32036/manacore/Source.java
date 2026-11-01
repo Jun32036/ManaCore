@@ -18,6 +18,7 @@ public enum Source {
     HELP("help", "助人委託", true),
     CHALLENGE("challenge", "合作挑戰", true),
     PROJECT("project", "社區工程", true),
+    ADVANCEMENT("advancement", "成就", true),
 
     GIFT_IN("gift_in", "收到贈與", false),
     GIFT_OUT("gift_out", "贈與他人", false),

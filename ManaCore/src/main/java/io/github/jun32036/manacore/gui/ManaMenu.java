@@ -84,7 +84,7 @@ public final class ManaMenu {
         int companions = plugin.coop().companions(p);
         if (companions > 0) headLore.add("<green>身邊有 " + companions + " 位夥伴：生活手藝加成中");
         if (plugin.mana().isAfk(d)) headLore.add("<red>你目前 AFK，暫時不會產生 mana");
-        m.set(4, head(p, "<light_purple>你的 mana：<white>" + d.balance, headLore));
+        m.set(4, plugin.icons().mana(1, "<aqua>你的 mana：<white>" + d.balance, headLore));
 
         // ---- 第一列：靠自己的雙手（採集、種植、畜牧、釣魚、烹飪、建造） ----
         List<String> today = new ArrayList<>();
@@ -143,7 +143,7 @@ public final class ManaMenu {
                         "<gray>今天還能感謝 <white>" + (maxThanks <= 0 ? "不限" : left + " 人"), "", "<yellow>點一下：選擇玩家")),
                 e -> { click(p); openThanks(p); });
 
-        m.set(20, icon(Material.AMETHYST_SHARD, 1, "<light_purple>贈與 mana",
+        m.set(20, plugin.icons().mana(1, "<aqua>贈與 mana",
                 List.of("<gray>把自己的 mana 送給別人", "", "<yellow>點一下：選擇玩家")),
                 e -> { click(p); openGift(p); });
 
@@ -196,6 +196,8 @@ public final class ManaMenu {
                         "<gray>・委託板：幫別人完成委託",
                         "<gray>・合作挑戰：一起打首領、守住突襲（人越多越多）",
                         "<gray>・社區工程：捐物資、一起完工",
+                        "<white>成就",
+                        "<gray>・達成原版成就有大量 mana（挑戰類最多）",
                         "",
                         "<dark_gray>做同一件事越久收益越少，換著玩最划算",
                         "<dark_gray>AFK 時不會產生 mana")));
@@ -290,9 +292,9 @@ public final class ManaMenu {
         int slot = 11;
         for (long a : GIFT_AMOUNTS) {
             boolean ok = d.balance >= a;
-            m.set(slot++, icon(ok ? Material.AMETHYST_SHARD : Material.GRAY_DYE, (int) Math.min(a, 64),
-                    (ok ? "<light_purple>" : "<gray>") + "送 " + a + " mana",
-                    List.of(ok ? "<yellow>點一下送出" : "<red>mana 不夠")),
+            String giftName = (ok ? "<aqua>" : "<gray>") + "送 " + a + " mana";
+            List<String> giftLore = List.of(ok ? "<yellow>點一下送出" : "<red>mana 不夠");
+            m.set(slot++, ok ? plugin.icons().mana((int) Math.min(a, 64), giftName, giftLore) : icon(Material.GRAY_DYE, (int) Math.min(a, 64), giftName, giftLore),
                     e -> {
                         click(p);
                         if (!t.isOnline()) { plugin.msg().send(p, "no-player", "name", t.getName()); openGift(p); return; }
@@ -345,8 +347,9 @@ public final class ManaMenu {
         int slot = 11;
         for (long a : DONATE_AMOUNTS) {
             boolean ok = d.balance >= a;
-            m.set(slot++, icon(ok ? Material.BONE_MEAL : Material.GRAY_DYE, (int) Math.min(a, 64),
-                    (ok ? "<green>" : "<gray>") + "捐 " + a + " mana", List.of(ok ? "<yellow>點一下捐獻" : "<red>mana 不夠")),
+            String donName = (ok ? "<green>" : "<gray>") + "捐 " + a + " mana";
+            List<String> donLore = List.of(ok ? "<yellow>點一下捐獻" : "<red>mana 不夠");
+            m.set(slot++, ok ? plugin.icons().mana((int) Math.min(a, 64), donName, donLore) : icon(Material.GRAY_DYE, (int) Math.min(a, 64), donName, donLore),
                     e -> { click(p); if (act().donate(p, a)) openTree(p); });
         }
         m.set(15, icon(Material.MOSS_BLOCK, 1, "<green>全部捐出（" + d.balance + "）", List.of("<yellow>Shift + 點擊 才會送出", "<gray>避免手滑")),
@@ -356,7 +359,7 @@ public final class ManaMenu {
                     if (act().donate(p, d.balance)) openTree(p);
                 });
         m.set(22, icon(Material.ARROW, "<white>返回"), e -> { click(p); openMain(p); });
-        m.set(18, icon(Material.AMETHYST_SHARD, 1, "<light_purple>你的 mana：" + d.balance, List.of()));
+        m.set(18, plugin.icons().mana(1, "<aqua>你的 mana：<white>" + d.balance, List.of()));
         m.border();
         m.open(p);
     }

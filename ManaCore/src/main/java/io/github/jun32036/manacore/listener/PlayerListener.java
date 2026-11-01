@@ -8,7 +8,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.player.PlayerAdvancementDoneEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import io.github.jun32036.manacore.Source;
+import io.papermc.paper.advancement.AdvancementDisplay;
+import net.kyori.adventure.text.Component;
+import org.bukkit.advancement.Advancement;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -79,6 +85,43 @@ public final class PlayerListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlace(BlockPlaceEvent e) {
         plugin.mana().touch(e.getPlayer());
+    }
+
+    // ---------------- Shift + F：開啟 mana 選單 ----------------
+
+    @EventHandler(ignoreCancelled = true)
+    public void onSwapHands(PlayerSwapHandItemsEvent e) {
+        if (!plugin.getConfig().getBoolean("menu.sneak-swap-opens-menu", true)) return;
+        Player p = e.getPlayer();
+        if (!p.isSneaking()) return;
+        e.setCancelled(true);
+        plugin.mana().touch(p);
+        plugin.menu().openMain(p);
+    }
+
+    // ---------------- 成就：達成原版成就得到大量 mana（一次性，本來就刷不了） ----------------
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onAdvancement(PlayerAdvancementDoneEvent e) {
+        var cfg = plugin.getConfig();
+        if (!cfg.getBoolean("sources.advancement.enabled", true)) return;
+        Advancement a = e.getAdvancement();
+        if (a.getKey().getKey().startsWith("recipes/")) return; // 配方解鎖不算成就
+        AdvancementDisplay display = a.getDisplay();
+        if (display == null) return;
+        String key = a.getKey().toString();
+        long amount;
+        String override = "sources.advancement.overrides." + key;
+        if (cfg.contains(override)) amount = cfg.getLong(override);
+        else amount = switch (display.frame()) {
+            case CHALLENGE -> cfg.getLong("sources.advancement.challenge");
+            case GOAL -> cfg.getLong("sources.advancement.goal");
+            default -> cfg.getLong("sources.advancement.task");
+        };
+        if (amount <= 0) return;
+        String kind = switch (display.frame()) { case CHALLENGE -> "挑戰"; case GOAL -> "目標"; default -> "成就"; };
+        plugin.mana().earn(e.getPlayer(), Source.ADVANCEMENT, amount,
+                Component.text("達成" + kind + "「").append(display.displayName()).append(Component.text("」")), key, false);
     }
 
     // ---------------- 祭壇 ----------------

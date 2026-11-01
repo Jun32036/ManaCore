@@ -7,7 +7,7 @@
 3. 第一次啟動時，工具會依序：
    - 檢查 Java 25。電腦上沒有的話，自動下載 Eclipse Temurin JRE 25 到 `server\jre`（約 50 MB，不會安裝到系統）。
    - 下載伺服器核心 **DivineMC 26.3**（build 5，和原本的測試服相同，約 70 MB）。
-   - 把 `plugins\` 裡的插件（ManaCore 1.3.0）裝進伺服器。
+   - 把 `plugins\` 裡的插件（ManaCore 1.4.0）裝進伺服器。
    - 請你閱讀並同意 [Minecraft EULA](https://aka.ms/MinecraftEULA)，輸入 `Y` 後繼續。
    - 啟動伺服器。
 4. 打開 Minecraft 26.3 →「多人遊戲」→「直接連線」→ 輸入 `localhost`。

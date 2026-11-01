@@ -17,6 +17,7 @@ import io.github.jun32036.manacore.economy.DexService;
 import io.github.jun32036.manacore.economy.OrderService;
 import io.github.jun32036.manacore.economy.ProjectService;
 import io.github.jun32036.manacore.gui.EconomyMenu;
+import io.github.jun32036.manacore.gui.Icons;
 import io.github.jun32036.manacore.gui.ManaMenu;
 import io.github.jun32036.manacore.gui.Menu;
 import io.github.jun32036.manacore.listener.ChatListener;
@@ -37,6 +38,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     private AltarMenu altar;
     private Actions actions;
     private ManaMenu menu;
+    private Icons icons;
     private EconomyMenu econMenu;
     private CraftService craft;
     private DexService dex;
@@ -69,6 +71,7 @@ public final class ManaCorePlugin extends JavaPlugin {
             getServer().getPluginManager().disablePlugin(this);
             return;
         }
+        icons = new Icons(this);
         altar = new AltarMenu(this);
         altar.reload();
         actions = new Actions(this);
@@ -128,6 +131,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     public void reloadAll() {
         reloadConfig();
         msg.load(getConfig().getConfigurationSection("messages"));
+        icons.reload();
         altar.reload();
         tree.reload();
         orders.loadToday(false);
@@ -176,6 +180,7 @@ public final class ManaCorePlugin extends JavaPlugin {
     public AltarMenu altar() { return altar; }
     public Actions actions() { return actions; }
     public ManaMenu menu() { return menu; }
+    public Icons icons() { return icons; }
     public EconomyMenu econMenu() { return econMenu; }
     public CraftService craft() { return craft; }
     public DexService dex() { return dex; }
