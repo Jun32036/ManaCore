@@ -455,7 +455,13 @@ public final class EconomyMenu {
             lore.add("");
             lore.add(full ? "<gold>✔ 已湊齊" : pr.done ? "<gray>已完工" : mine > 0 ? "<yellow>點一下：捐出身上全部（捐到湊齊為止）" : "<gray>身上沒有");
             ItemStack it = icon(full ? Material.LIME_STAINED_GLASS_PANE : n.material(), 1, "<white>" + tr(n.material()), lore);
-            m.set(slot++, it, e -> { click(p); if (plugin.projects().donateItems(p, pr, n.material())) openProject(p, id); });
+            Material need = n.material();
+            m.set(slot++, it, e -> {
+                click(p);
+                // 每次點擊都重新查工程（/manaadmin reload 後舊物件已失效）
+                ProjectService.Project cur = plugin.projects().get(id);
+                if (cur != null && plugin.projects().donateItems(p, cur, need)) openProject(p, id);
+            });
         }
         if (pr.manaGoal > 0) {
             m.set(46, icon(Material.AMETHYST_CLUSTER, 1, "<light_purple>mana：" + pr.mana + "/" + pr.manaGoal,
@@ -465,7 +471,11 @@ public final class EconomyMenu {
                 boolean ok = d.balance >= a && !pr.done && pr.mana < pr.manaGoal;
                 m.set(s++, icon(ok ? Material.AMETHYST_SHARD : Material.GRAY_DYE, (int) Math.min(64, a), (ok ? "<light_purple>" : "<gray>") + "投入 " + a + " mana",
                         List.of(ok ? "<yellow>點一下投入" : pr.done ? "<gray>已完工" : "<red>不能投入")),
-                        e -> { click(p); if (plugin.projects().invest(p, pr, a)) openProject(p, id); });
+                        e -> {
+                            click(p);
+                            ProjectService.Project cur = plugin.projects().get(id);
+                            if (cur != null && plugin.projects().invest(p, cur, a)) openProject(p, id);
+                        });
             }
         }
         back(m, 53, p, () -> openProjects(p));

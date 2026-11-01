@@ -67,6 +67,12 @@ public final class OrderService {
         return today;
     }
 
+    /** 依訂單序號找（序號 ≠ 清單位置：設定檔移除某張訂單後，序號仍沿用當天抽選時的順序） */
+    public Order find(int idx) {
+        for (Order o : today) if (o.idx == idx) return o;
+        return null;
+    }
+
     public long completionBonus() {
         return plugin.getConfig().getLong("sources.order.completion-bonus", 3);
     }
@@ -140,9 +146,17 @@ public final class OrderService {
             @SuppressWarnings("unchecked") List<String> ids = (List<String>) res[0];
             @SuppressWarnings("unchecked") Map<Integer, Integer> progress = (Map<Integer, Integer>) res[1];
             @SuppressWarnings("unchecked") Map<Integer, Map<UUID, Integer>> contrib = (Map<Integer, Map<UUID, Integer>>) res[2];
+            // 同一天重新載入（/manaadmin reload）：以記憶體裡的進度為準，
+            // 避免讀資料庫到回到主執行緒之間的交貨被蓋掉
+            boolean sameDay = !reroll && d.equals(day) && !today.isEmpty();
+            if (sameDay) {
+                progress.clear();
+                for (Order o : today) progress.put(o.idx, o.delivered);
+            } else {
+                contributors.clear();
+                contributors.putAll(contrib);
+            }
             today.clear();
-            contributors.clear();
-            contributors.putAll(contrib);
             int idx = 0;
             for (String id : ids) {
                 Def def = pool.get(id);
@@ -195,8 +209,8 @@ public final class OrderService {
     public boolean deliver(Player p, int idx) {
         if (!enabled()) return false;
         PlayerData d = plugin.mana().get(p);
-        if (d == null || idx < 0 || idx >= today.size() || !plugin.mana().today().equals(day)) return false;
-        Order o = today.get(idx);
+        Order o = find(idx);
+        if (d == null || o == null || !plugin.mana().today().equals(day)) return false;
         Def def = o.def;
         if (o.complete()) {
             plugin.msg().raw(p, "<gray>這張訂單已經被大家完成了，謝謝！</gray>");

@@ -53,6 +53,10 @@ public final class CommissionService {
 
     private final ManaCorePlugin plugin;
     private final Map<Long, Commission> live = new LinkedHashMap<>();
+    /** 已送出、資料庫還沒回傳編號的發布（同一 tick 連發多張也要算進上限） */
+    private final Map<UUID, Integer> posting = new java.util.HashMap<>();
+    /** 正在領取中的委託（避免連點重複領取） */
+    private final java.util.Set<Long> claiming = new java.util.HashSet<>();
 
     public CommissionService(ManaCorePlugin plugin) {
         this.plugin = plugin;
@@ -137,7 +141,8 @@ public final class CommissionService {
     }
 
     public long openCount(UUID poster) {
-        return live.values().stream().filter(c -> poster.equals(c.poster) && ("open".equals(c.status) || "taken".equals(c.status))).count();
+        return posting.getOrDefault(poster, 0)
+                + live.values().stream().filter(c -> poster.equals(c.poster) && ("open".equals(c.status) || "taken".equals(c.status))).count();
     }
 
     public int unclaimed(UUID poster) {
@@ -205,6 +210,7 @@ public final class CommissionService {
         cm.reward = reward;
         cm.note = note;
         cm.status = "open";
+        posting.merge(p.getUniqueId(), 1, Integer::sum);
         plugin.db().query(c -> {
             try (PreparedStatement ps = c.prepareStatement(
                     "INSERT INTO commissions(created, poster, poster_name, poster_ip, kind, material, amount, reward, note, status, claimed) VALUES(?,?,?,?,?,?,?,?,?,'open',1)",
@@ -223,7 +229,14 @@ public final class CommissionService {
                     return rs.next() ? rs.getLong(1) : -1L;
                 }
             }
-        }).thenAccept(id -> plugin.sync(() -> {
+        }).whenComplete((id, err) -> plugin.sync(() -> {
+            posting.computeIfPresent(cm.poster, (k, v) -> v <= 1 ? null : v - 1);
+            if (err != null || id == null || id < 0) {
+                // 寫入失敗：退回託管的酬謝（手續費已流入生命之樹，不重複退，避免憑空多出 mana）
+                plugin.mana().adjust(cm.poster, reward, Source.COMMISSION_REFUND, "委託發布失敗退回");
+                plugin.getLogger().warning("委託寫入資料庫失敗，已退回酬謝 " + reward + " mana 給 " + cm.posterName);
+                return;
+            }
             cm.id = id;
             live.put(id, cm);
             Component desc = "item".equals(kind)
@@ -346,46 +359,34 @@ public final class CommissionService {
         update(cm, null, true);
     }
 
-    /** 發布者領取離線時送達的物品 */
+    /** 發布者領取離線時送達的物品：先在主執行緒把物品交出去，之後才清掉資料庫裡的物品 */
     public void claim(Player poster, Commission cm) {
-        if (!poster.getUniqueId().equals(cm.poster) || !"done".equals(cm.status) || cm.claimed) return;
-        cm.claimed = true;
-        live.remove(cm.id);
+        if (!poster.getUniqueId().equals(cm.poster) || !"done".equals(cm.status) || cm.claimed || claiming.contains(cm.id)) return;
         long id = cm.id;
+        claiming.add(id);
         plugin.db().query(c -> {
-            byte[] blob = null;
-            try (PreparedStatement ps = c.prepareStatement("SELECT items FROM commissions WHERE id=?")) {
+            try (PreparedStatement ps = c.prepareStatement("SELECT items FROM commissions WHERE id=? AND claimed=0")) {
                 ps.setLong(1, id);
                 try (ResultSet rs = ps.executeQuery()) {
-                    if (rs.next()) blob = rs.getBytes(1);
+                    return rs.next() ? rs.getBytes(1) : null;
                 }
             }
-            try (PreparedStatement ps = c.prepareStatement("UPDATE commissions SET claimed=1, items=NULL WHERE id=?")) {
-                ps.setLong(1, id);
-                ps.executeUpdate();
-            }
-            return blob;
-        }).thenAccept(blob -> plugin.sync(() -> {
-            if (blob == null) return;
+        }).whenComplete((blob, err) -> plugin.sync(() -> {
+            claiming.remove(id);
+            if (err != null || blob == null || !poster.isOnline() || cm.claimed) return; // 什麼都沒交出去，資料庫也沒動
             List<ItemStack> items = new ArrayList<>();
             for (ItemStack it : ItemStack.deserializeItemsFromBytes(blob)) if (it != null && !it.isEmpty()) items.add(it);
-            if (poster.isOnline()) {
-                give(poster, items);
-                plugin.msg().raw(poster, "<green>已領取委託物品。</green>");
-            } else {
-                // 領取途中下線：放回資料庫，下次再領
-                cm.claimed = false;
-                live.put(cm.id, cm);
-                byte[] back = ItemStack.serializeItemsAsBytes(items);
-                plugin.db().run(c -> {
-                    try (PreparedStatement ps = c.prepareStatement("UPDATE commissions SET claimed=0, items=? WHERE id=?")) {
-                        ps.setBytes(1, back);
-                        ps.setLong(2, id);
-                        ps.executeUpdate();
-                    }
-                    return null;
-                });
-            }
+            cm.claimed = true;
+            live.remove(id);
+            give(poster, items);
+            plugin.msg().raw(poster, "<green>已領取委託物品。</green>");
+            plugin.db().run(c -> {
+                try (PreparedStatement ps = c.prepareStatement("UPDATE commissions SET claimed=1, items=NULL WHERE id=?")) {
+                    ps.setLong(1, id);
+                    ps.executeUpdate();
+                }
+                return null;
+            });
         }));
     }
 

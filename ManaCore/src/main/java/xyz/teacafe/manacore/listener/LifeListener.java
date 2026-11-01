@@ -45,7 +45,10 @@ import java.util.UUID;
  *
  * 防刷：
  * - 礦石、原木、南瓜西瓜、甘蔗等「自然產物」如果是玩家放下的，打掉不算（記在區塊的持久資料裡，重啟也記得）。
- * - 建造：剛放下的方塊 10 分鐘內被同一人拆掉，點數收回；單一種方塊狂放，多樣性只有一半。
+ * - 建造：點數要等方塊在原處放滿 10 分鐘、而且還是同一種方塊才入帳（拆掉、被活塞推走、掉落都不算）；
+ *   單一種方塊狂放，多樣性只有一半。
+ * - 活塞推動「玩家放的自然方塊」時，標記跟著移動，不能靠活塞洗掉標記。
+ * - 合成料理：下一個 tick 比對合成格實際少了多少才算（背包滿、沒合成成功的點擊不算）。
  */
 public final class LifeListener implements Listener {
 
@@ -61,16 +64,21 @@ public final class LifeListener implements Listener {
             Material.BOW, Material.ENCHANTED_BOOK, Material.FISHING_ROD, Material.NAME_TAG, Material.NAUTILUS_SHELL, Material.SADDLE);
     /** 合成出來算「料理」的非食物（蛋糕是方塊） */
     private static final Set<Material> DISH_EXTRA = EnumSet.of(Material.CAKE);
-    private static final long BUILD_UNDO_MS = 10 * 60_000L;
+    private static final long BUILD_SETTLE_MS = 10 * 60_000L;
+    private static final int MAX_PENDING = 2048;
 
     private final ManaCorePlugin plugin;
     private final NamespacedKey placedKey;
-    /** 每位玩家最近放的方塊：位置 → 當時得到的有效點數（拆掉時收回） */
-    private final Map<UUID, LinkedHashMap<String, double[]>> recentPlaced = new HashMap<>();
+    /** 還沒入帳的建造點數：每位玩家 → (位置 → 待入帳) */
+    private final Map<UUID, LinkedHashMap<String, PendingBuild>> pending = new HashMap<>();
+
+    private record PendingBuild(String world, int x, int y, int z, Material type, double eff, long at) {}
 
     public LifeListener(ManaCorePlugin plugin) {
         this.plugin = plugin;
         this.placedKey = new NamespacedKey(plugin, "placed");
+        // 每分鐘結算一次放滿 10 分鐘的方塊
+        org.bukkit.Bukkit.getScheduler().runTaskTimer(plugin, this::settleBuilds, 1200L, 1200L);
     }
 
     private CraftService craft() {
@@ -98,7 +106,6 @@ public final class LifeListener implements Listener {
         Player p = e.getPlayer();
         Block b = e.getBlock();
         Material type = b.getType();
-        undoBuild(p, b);
 
         // 成熟作物
         if (CROPS.contains(type)) {
@@ -165,22 +172,67 @@ public final class LifeListener implements Listener {
         if (!type.isSolid() || CROPS.contains(type)) return; // 火把、作物、花之類不算建造
 
         Player p = e.getPlayer();
-        double eff = craft().award(p, Skill.BUILD, craft().points("build-block", 0.25), id(type), "建造");
+        double eff = craft().measure(p, Skill.BUILD, craft().points("build-block", 0.25), id(type));
         if (eff <= 0) return;
-        LinkedHashMap<String, double[]> recent = recentPlaced.computeIfAbsent(p.getUniqueId(), k -> new LinkedHashMap<>());
-        recent.put(blockKey(b), new double[]{eff, System.currentTimeMillis()});
-        while (recent.size() > 512) recent.remove(recent.keySet().iterator().next());
+        LinkedHashMap<String, PendingBuild> mine = pending.computeIfAbsent(p.getUniqueId(), k -> new LinkedHashMap<>());
+        String key = b.getWorld().getName() + ":" + b.getX() + ":" + b.getY() + ":" + b.getZ();
+        mine.remove(key); // 同一格重放：只算最後一次
+        mine.put(key, new PendingBuild(b.getWorld().getName(), b.getX(), b.getY(), b.getZ(), type, eff, System.currentTimeMillis()));
+        while (mine.size() > MAX_PENDING) mine.remove(mine.keySet().iterator().next());
     }
 
-    private void undoBuild(Player p, Block b) {
-        LinkedHashMap<String, double[]> recent = recentPlaced.get(p.getUniqueId());
-        if (recent == null) return;
-        double[] v = recent.remove(blockKey(b));
-        if (v != null && System.currentTimeMillis() - (long) v[1] <= BUILD_UNDO_MS) craft().revoke(p, Skill.BUILD, v[0]);
+    /** 放滿 10 分鐘、方塊仍在原處且種類相同的，才入帳 */
+    private void settleBuilds() {
+        long now = System.currentTimeMillis();
+        for (Map.Entry<UUID, LinkedHashMap<String, PendingBuild>> en : pending.entrySet()) {
+            Player p = org.bukkit.Bukkit.getPlayer(en.getKey());
+            if (p == null) continue; // 離線的人等上線再結算
+            double sum = 0;
+            int n = 0;
+            var it = en.getValue().values().iterator();
+            while (it.hasNext()) {
+                PendingBuild pb = it.next();
+                if (now - pb.at() < BUILD_SETTLE_MS) break; // 依放置時間排序，後面的更新
+                it.remove();
+                org.bukkit.World w = org.bukkit.Bukkit.getWorld(pb.world());
+                if (w == null || !w.isChunkLoaded(pb.x() >> 4, pb.z() >> 4)) continue;
+                if (w.getBlockAt(pb.x(), pb.y(), pb.z()).getType() != pb.type()) continue;
+                sum += pb.eff();
+                n++;
+            }
+            if (sum > 0) craft().settle(p, Skill.BUILD, sum, "建造 " + n + " 個方塊");
+        }
+        pending.values().removeIf(Map::isEmpty);
     }
 
-    private static String blockKey(Block b) {
-        return b.getWorld().getName() + ":" + b.getX() + ":" + b.getY() + ":" + b.getZ();
+    // ---- 活塞：玩家放的自然方塊被推動時，標記跟著走 ----
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPistonExtend(org.bukkit.event.block.BlockPistonExtendEvent e) {
+        movePlaced(e.getBlocks(), e.getDirection());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPistonRetract(org.bukkit.event.block.BlockPistonRetractEvent e) {
+        movePlaced(e.getBlocks(), e.getDirection());
+    }
+
+    /**
+     * 被推動的方塊中，凡是「自然產物」種類的，都在移動目的地加上標記（不論原本是否玩家放的）：
+     * 用活塞搬動礦石或原木本來就不是正常的採集。目的地一定是空氣或另一個被推動的方塊，
+     * 只標記符合這個條件的那一側，避免不同版本對收回方向定義不同而標錯。
+     */
+    private void movePlaced(java.util.List<Block> blocks, org.bukkit.block.BlockFace dir) {
+        if (blocks.isEmpty()) return;
+        java.util.Set<Block> moving = new java.util.HashSet<>(blocks);
+        for (Block b : blocks) {
+            if (!isTracked(b.getType())) continue;
+            consumePlaced(b);
+            for (org.bukkit.block.BlockFace f : new org.bukkit.block.BlockFace[]{dir, dir.getOppositeFace()}) {
+                Block to = b.getRelative(f);
+                if (to.getType().isAir() || moving.contains(to)) markPlaced(to);
+            }
+        }
     }
 
     // ---- 區塊持久資料：記錄玩家放置的自然方塊 ----
@@ -280,30 +332,50 @@ public final class LifeListener implements Listener {
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onCraft(CraftItemEvent e) {
         if (!(e.getWhoClicked() instanceof Player p)) return;
-        ItemStack result = e.getRecipe().getResult();
-        Material m = result.getType();
+        if (e.getAction() == org.bukkit.event.inventory.InventoryAction.NOTHING) return;
+        Material m = e.getRecipe().getResult().getType();
         if (m.isAir()) return;
         plugin.mana().touch(p);
-        if (m.isEdible() || DISH_EXTRA.contains(m)) {
-            int times = e.isShiftClick() ? shiftCraftTimes(e) : 1;
-            double per = craft().points("dishes." + id(m), craft().points("dish-default", 1));
-            craft().award(p, Skill.COOKING, per * times, id(m), "料理" + id(m));
-            dex().discover(p, DexService.Category.DISH, id(m), name(m));
-        } else {
-            dex().discover(p, DexService.Category.CRAFT, id(m), name(m));
-        }
+        // 合成格的內容（之後比對實際用掉多少）
+        org.bukkit.inventory.CraftingInventory inv = e.getInventory();
+        ItemStack[] before = cloneMatrix(inv.getMatrix());
+        org.bukkit.Bukkit.getScheduler().runTask(plugin, () -> {
+            if (!p.isOnline()) return;
+            int times = craftedTimes(before, inv.getMatrix());
+            if (times <= 0) return; // 背包滿、沒有真的合成
+            if (m.isEdible() || DISH_EXTRA.contains(m)) {
+                double per = craft().points("dishes." + id(m), craft().points("dish-default", 1));
+                craft().award(p, Skill.COOKING, per * times, id(m), "料理" + id(m));
+                dex().discover(p, DexService.Category.DISH, id(m), name(m));
+            } else {
+                dex().discover(p, DexService.Category.CRAFT, id(m), name(m));
+            }
+        });
     }
 
-    /** Shift 連續合成時，大約會做幾次（以合成格中最少的那一格估計） */
-    private static int shiftCraftTimes(CraftItemEvent e) {
-        int min = 64;
-        boolean any = false;
-        for (ItemStack it : e.getInventory().getMatrix()) {
-            if (it == null || it.getType().isAir()) continue;
-            any = true;
-            min = Math.min(min, it.getAmount());
+    private static ItemStack[] cloneMatrix(ItemStack[] matrix) {
+        ItemStack[] out = new ItemStack[matrix.length];
+        for (int i = 0; i < matrix.length; i++) out[i] = matrix[i] == null ? null : matrix[i].clone();
+        return out;
+    }
+
+    /**
+     * 實際合成了幾次：每次合成，每個材料格各少 1。只看合成後種類不變或變空的格子
+     * （牛奶桶會變成空桶，那格不能拿來算）。
+     */
+    static int craftedTimes(ItemStack[] before, ItemStack[] after) {
+        int best = 0;
+        for (int i = 0; i < before.length && i < after.length; i++) {
+            ItemStack b = before[i];
+            if (b == null || b.getType().isAir()) continue;
+            ItemStack a = after[i];
+            int left;
+            if (a == null || a.getType().isAir()) left = 0;
+            else if (a.getType() == b.getType()) left = a.getAmount();
+            else continue;
+            best = Math.max(best, b.getAmount() - left);
         }
-        return any ? Math.max(1, min) : 1;
+        return best;
     }
 
     // ======================================================================

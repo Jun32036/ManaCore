@@ -116,6 +116,10 @@ public final class ManaService {
                 try (ResultSet rs = ps.executeQuery()) {
                     while (rs.next()) {
                         String key = rs.getString(1);
+                        if (key.startsWith(CHALLENGE_DAILY_PREFIX)) {
+                            d.challengesToday.add(key.substring(CHALLENGE_DAILY_PREFIX.length()));
+                            continue;
+                        }
                         if (key.startsWith(DEX_DAILY_PREFIX)) {
                             d.dexToday.put(key.substring(DEX_DAILY_PREFIX.length()), rs.getLong(2));
                             continue;
@@ -285,6 +289,18 @@ public final class ManaService {
     /** daily 表中「每種手藝」的紀錄 key 前綴（和來源 key 放在同一張表） */
     public static final String SKILL_DAILY_PREFIX = "craft:";
     public static final String DEX_DAILY_PREFIX = "dexcat:";
+    public static final String CHALLENGE_DAILY_PREFIX = "challenge:";
+
+    /** 記錄今天已拿過的合作挑戰（重新登入也記得） */
+    public boolean markChallenge(PlayerData d, String key) {
+        if (!d.challengesToday.add(key)) return false;
+        String id = d.uuid.toString(), day = currentDay, k = CHALLENGE_DAILY_PREFIX + key;
+        db.run(c -> {
+            Database.addDaily(c, day, id, k, 1);
+            return null;
+        });
+        return true;
+    }
 
     /** 記錄圖鑑某分類今天拿到的 mana */
     public void addDexDaily(PlayerData d, String category, long amount) {

@@ -119,6 +119,16 @@ public final class CraftService {
      * @return 實際有效點數（建造用它來撤銷「放了又拆」）
      */
     public double award(Player p, Skill s, double raw, String itemKey, String what) {
+        double eff = measure(p, s, raw, itemKey);
+        if (eff > 0) settle(p, s, eff, what);
+        return eff;
+    }
+
+    /**
+     * 只計算有效點數（消耗新鮮度、記錄多樣性、套用結伴），先不給經驗與 mana。
+     * 建造用：方塊要在原處放滿一段時間才 {@link #settle} 入帳。
+     */
+    public double measure(Player p, Skill s, double raw, String itemKey) {
         if (!enabled() || raw <= 0) return 0;
         PlayerData d = plugin.mana().get(p);
         if (d == null || plugin.mana().isAfk(d)) return 0;
@@ -129,21 +139,16 @@ public final class CraftService {
         double vf = v.factor(d("variety.base", 0.5), d("variety.per-distinct", 0.125));
         int companions = plugin.coop().companions(p);
         double cf = EconMath.companionFactor(companions, d("companion.bonus", 0.25));
-        double eff = fresh(p.getUniqueId(), s).consume(raw * vf * cf, now,
+        return fresh(p.getUniqueId(), s).consume(raw * vf * cf, now,
                 d("freshness.recover-per-minute", 0.01), d("freshness.decay-per-point", 0.005), d("freshness.floor", 0.3));
-
-        addXp(p, d, s, eff);
-        credit(p, d, s, eff, what);
-        return eff;
     }
 
-    /** 撤銷先前得到的點數（例如剛放下的方塊馬上拆掉） */
-    public void revoke(Player p, Skill s, double eff) {
+    /** 把已計算好的有效點數入帳：加經驗、累積點數、換 mana */
+    public void settle(Player p, Skill s, double eff, String what) {
         PlayerData d = plugin.mana().get(p);
         if (d == null || eff <= 0) return;
-        double floor = -2 * pointsPerMana();
-        d.craftPoints.put(s, Math.max(floor, d.craftPoints.getOrDefault(s, 0.0) - eff));
-        d.craftXp.put(s, Math.max(0, d.xp(s) - eff));
+        addXp(p, d, s, eff);
+        credit(p, d, s, eff, what);
     }
 
     /** 直接加經驗（城鎮訂單、社區工程用），不產生 mana */

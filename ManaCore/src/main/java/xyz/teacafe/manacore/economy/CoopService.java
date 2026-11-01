@@ -91,7 +91,7 @@ public final class CoopService implements Listener {
         return null;
     }
 
-    @EventHandler(priority = EventPriority.MONITOR)
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onDeath(EntityDeathEvent e) {
         LivingEntity boss = e.getEntity();
         Map<UUID, Long> h = hits.remove(boss.getUniqueId());
@@ -111,6 +111,7 @@ public final class CoopService implements Listener {
         // 在場支援（治療、擋怪、蓋掩體的人）也算
         double r = plugin.getConfig().getDouble("sources.challenge.support-radius", 48);
         for (Player p : new ArrayList<>(group)) group.addAll(nearbyActive(p, r));
+        group = distinctNetworks(group);
 
         String id = boss.getType().getKey().getKey();
         Component name = Component.translatable(boss.getType().translationKey());
@@ -125,9 +126,25 @@ public final class CoopService implements Listener {
     public void onRaid(RaidFinishEvent e) {
         long base = plugin.getConfig().getLong("sources.challenge.raid", 15);
         if (base <= 0 || !enabled()) return;
-        List<Player> winners = new ArrayList<>(e.getWinners());
+        List<Player> winners = new ArrayList<>(distinctNetworks(new LinkedHashSet<>(e.getWinners())));
         if (winners.isEmpty()) return;
         reward(winners, "raid", base, Component.text("一起守住了村莊（突襲勝利）"));
+    }
+
+    /** 同一個網路的多個帳號只算一位（不能靠分身拿雙份或灌隊伍人數） */
+    private Set<Player> distinctNetworks(Set<Player> in) {
+        Set<Player> out = new LinkedHashSet<>();
+        for (Player p : in) {
+            PlayerData d = plugin.mana().get(p);
+            if (d == null) continue;
+            boolean dup = false;
+            for (Player q : out) {
+                PlayerData qd = plugin.mana().get(q);
+                if (qd != null && plugin.mana().sameIp(d, qd)) { dup = true; break; }
+            }
+            if (!dup) out.add(p);
+        }
+        return out;
     }
 
     private boolean enabled() {
@@ -143,7 +160,7 @@ public final class CoopService implements Listener {
         for (Player p : group) {
             PlayerData d = plugin.mana().get(p);
             if (d == null) continue;
-            if (oncePerDay && !d.challengesToday.add(challengeKey)) {
+            if (oncePerDay && !plugin.mana().markChallenge(d, challengeKey)) {
                 plugin.msg().raw(p, "<gray>今天已經拿過這項合作挑戰的 mana 了，明天再一起來吧！</gray>");
                 continue;
             }
