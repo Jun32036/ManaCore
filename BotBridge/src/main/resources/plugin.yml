@@ -1,0 +1,16 @@
+name: BotBridge
+version: '${project.version}'
+main: xyz.teacafe.botbridge.BotBridgePlugin
+api-version: '26.3'
+description: /bot 指令，把玩家的要求轉交給測試機器人 ClaudeBot
+author: 萊森
+
+commands:
+  bot:
+    description: 叫 ClaudeBot 幫忙
+    usage: /bot <說明|來|跟|停|謝|參觀|送|狀態|導師>
+    permission: botbridge.use
+
+permissions:
+  botbridge.use:
+    default: true

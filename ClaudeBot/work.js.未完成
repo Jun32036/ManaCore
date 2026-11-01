@@ -1,0 +1,395 @@
+// ClaudeBot 的「幹活」能力：砍樹、挖礦、收成、合成、給東西、看背包
+const { Movements, goals } = require('mineflayer-pathfinder');
+const { Vec3 } = require('vec3');
+
+// 只准拆天然方塊，避免拆到玩家的建築
+const NATURAL = new Set([
+  'dirt', 'grass_block', 'coarse_dirt', 'podzol', 'rooted_dirt', 'mud', 'clay', 'gravel', 'sand', 'red_sand',
+  'stone', 'cobblestone', 'deepslate', 'cobbled_deepslate', 'andesite', 'diorite', 'granite', 'tuff', 'calcite', 'dripstone_block',
+  'netherrack', 'snow', 'snow_block', 'short_grass', 'tall_grass', 'fern', 'large_fern', 'dead_bush', 'vine', 'moss_block', 'moss_carpet',
+  'coal_ore', 'deepslate_coal_ore', 'iron_ore', 'deepslate_iron_ore', 'copper_ore', 'deepslate_copper_ore',
+  'gold_ore', 'deepslate_gold_ore', 'redstone_ore', 'deepslate_redstone_ore', 'lapis_ore', 'deepslate_lapis_ore',
+  'diamond_ore', 'deepslate_diamond_ore', 'emerald_ore', 'deepslate_emerald_ore',
+  'wheat', 'carrots', 'potatoes', 'beetroots', 'sweet_berry_bush', 'pumpkin', 'melon', 'sugar_cane', 'bamboo', 'cactus'
+]);
+const isLog = n => /_log$|_stem$/.test(n) && !n.startsWith('stripped_');
+const isLeaves = n => n.endsWith('_leaves');
+
+// 中文名稱 → 物品 ID（也可以直接打英文 ID）
+const ITEM_ZH = {
+  工作台: 'crafting_table', 木棒: 'stick', 木棍: 'stick', 木板: 'planks', 原木: 'log',
+  木鎬: 'wooden_pickaxe', 木斧: 'wooden_axe', 木劍: 'wooden_sword', 木鏟: 'wooden_shovel', 木鋤: 'wooden_hoe',
+  石鎬: 'stone_pickaxe', 石斧: 'stone_axe', 石劍: 'stone_sword', 石鏟: 'stone_shovel', 石鋤: 'stone_hoe',
+  熔爐: 'furnace', 箱子: 'chest', 火把: 'torch', 碗: 'bowl', 梯子: 'ladder', 麵包: 'bread',
+  門: 'oak_door', 柵欄: 'oak_fence', 告示牌: 'oak_sign', 船: 'oak_boat', 階梯: 'oak_stairs', 半磚: 'oak_slab',
+  圓石: 'cobblestone', 石頭: 'cobblestone', 煤炭: 'coal', 石磚: 'stone_bricks'
+};
+// 挖礦目標 → 方塊 ID 與需要的鎬
+const ORE_ZH = {
+  石頭: { blocks: ['stone'], tier: 'wooden' },
+  圓石: { blocks: ['stone', 'cobblestone'], tier: 'wooden' },
+  煤: { blocks: ['coal_ore', 'deepslate_coal_ore'], tier: 'wooden' },
+  煤炭: { blocks: ['coal_ore', 'deepslate_coal_ore'], tier: 'wooden' },
+  鐵: { blocks: ['iron_ore', 'deepslate_iron_ore'], tier: 'stone' },
+  銅: { blocks: ['copper_ore', 'deepslate_copper_ore'], tier: 'stone' },
+  泥土: { blocks: ['dirt', 'grass_block'], tier: null },
+  沙: { blocks: ['sand'], tier: null }
+};
+const CROPS = { wheat: 'wheat_seeds', carrots: 'carrot', potatoes: 'potato', beetroots: 'beetroot_seeds' };
+
+module.exports = function attachWork(bot, say, log) {
+  const reg = bot.registry;
+  let busy = null;
+  let cancelled = false;
+
+  const count = name => bot.inventory.items().filter(i => i.name === name).reduce((s, i) => s + i.count, 0);
+  const countMatch = fn => bot.inventory.items().filter(i => fn(i.name)).reduce((s, i) => s + i.count, 0);
+  const sleep = ms => new Promise(r => setTimeout(r, ms));
+
+  function workMovements() {
+    const mv = new Movements(bot);
+    mv.canDig = true;
+    mv.blocksCantBreak = new Set(reg.blocksArray.filter(b => !(NATURAL.has(b.name) || isLog(b.name) || isLeaves(b.name))).map(b => b.id));
+    mv.maxDropDown = 6;
+    mv.allowSprinting = false; // 經過 ViaVersion 時衝刺會被伺服器拉回，只用走的
+    mv.allowParkour = true;
+    mv.allow1by1towers = true;
+    return mv;
+  }
+
+  function withTimeout(promise, ms, what) {
+    let t;
+    return Promise.race([promise, new Promise((_, rej) => { t = setTimeout(() => rej(new Error(what + ' timeout')), ms); })])
+      .finally(() => clearTimeout(t));
+  }
+
+  // 走過去 → 換工具 → 挖 → 撿掉落物；每一步都有時限
+  // 讓 bot.digTime 可以暫時放慢
+  let digFactor = 1;
+  const origDigTime = bot.digTime.bind(bot);
+  bot.digTime = b => Math.ceil(origDigTime(b) * digFactor);
+
+  async function collectOne(target) {
+    const pos = target.position.clone();
+    if (bot.entity.position.offset(0, 1.6, 0).distanceTo(pos.offset(0.5, 0.5, 0.5)) > 4.2) {
+      try {
+        await withTimeout(bot.pathfinder.goto(new goals.GoalLookAtBlock(pos, bot.world, { reach: 4 })), 20000, '走路');
+      } catch (e) {
+        bot.pathfinder.setGoal(null);
+        throw e;
+      }
+    }
+    checkCancel();
+    const block = bot.blockAt(pos);
+    if (!block || block.name === 'air') return;
+    try { if (bot.tool) await bot.tool.equipForBlock(block, {}); } catch (_) {}
+    bot.clearControlStates();
+    // 先用正常速度挖；伺服器不認帳時（例如它認為我沒站穩），改用 5 倍時間慢慢挖
+    try {
+      await withTimeout(bot.dig(block, true), 8000 + bot.digTime(block), '挖掘');
+    } catch (e) {
+      if (cancelled) throw e;
+      try { bot.stopDigging(); } catch (_) {}
+      await sleep(300);
+      const again = bot.blockAt(pos);
+      if (!again || again.name === 'air') return;
+      digFactor = 5.5;
+      try { await withTimeout(bot.dig(again, true), 8000 + bot.digTime(again), '慢慢挖'); }
+      finally { digFactor = 1; }
+    }
+    await sleep(400);
+    const drop = Object.values(bot.entities)
+      .filter(e => e.name === 'item' && e.position.distanceTo(pos) < 5)
+      .sort((a, b) => a.position.distanceTo(pos) - b.position.distanceTo(pos))[0];
+    if (drop) {
+      try { await withTimeout(bot.pathfinder.goto(new goals.GoalNear(drop.position.x, drop.position.y, drop.position.z, 0.5)), 6000, '撿東西'); }
+      catch (_) { bot.pathfinder.setGoal(null); }
+    }
+  }
+
+  function checkCancel() {
+    if (cancelled) throw new Error('cancelled');
+  }
+
+  async function run(label, fn) {
+    if (busy) {
+      say(`我正在${busy}，等我一下（或打 !停）`);
+      return;
+    }
+    busy = label;
+    cancelled = false;
+    bot.pathfinder.setMovements(workMovements());
+    try {
+      await fn();
+    } catch (e) {
+      if (e.message === 'cancelled') say('好，先停下來');
+      else {
+        log(`${label}失敗：${e.stack || e.message}`);
+        say(`${label}的時候出了點狀況：${String(e.message).slice(0, 60)}`);
+      }
+    } finally {
+      busy = null;
+    }
+  }
+
+  function stop() {
+    cancelled = true;
+    bot.pathfinder.setGoal(null);
+    try { bot.stopDigging(); } catch (_) {}
+  }
+
+  // ---------- 收集方塊 ----------
+  // 一次處理一個目標，每個最多 30 秒；卡住就放棄那一格、換下一個
+  async function collectBlocks(matchFn, n, maxDistance = 48) {
+    let got = 0;
+    let misses = 0;
+    const skip = new Set();
+    while (got < n && misses < 5) {
+      checkCancel();
+      // 優先挑站在地上就搆得到的（太高的樹幹先略過），再依距離排序
+      const me = bot.entity.position;
+      const score = p => p.distanceTo(me) + Math.max(0, p.y - (me.y + 1)) * 8 + Math.max(0, me.y - p.y - 4) * 2;
+      const positions = bot.findBlocks({ matching: b => b && matchFn(b.name), maxDistance, count: 128 })
+        .filter(p => !skip.has(p.toString()))
+        .sort((a, b) => score(a) - score(b));
+      if (positions.length === 0) break;
+      const target = bot.blockAt(positions[0]);
+      if (!target) { skip.add(positions[0].toString()); continue; }
+      const key = target.position.toString();
+      try {
+        await collectOne(target);
+        const after = bot.blockAt(target.position);
+        if (after && matchFn(after.name)) { skip.add(key); misses++; }
+        else { got++; misses = 0; }
+      } catch (e) {
+        if (cancelled) throw new Error('cancelled');
+        bot.pathfinder.setGoal(null);
+        try { bot.stopDigging(); } catch (_) {}
+        skip.add(key);
+        misses++;
+        log(`略過 ${target.name} @ ${key}：${e.message}`);
+        await sleep(300);
+      }
+    }
+    return got;
+  }
+
+  async function chop(n) {
+    const before = countMatch(isLog);
+    await collectBlocks(isLog, n);
+    await sleep(1500); // 等掉落物進背包
+    return countMatch(isLog) - before;
+  }
+
+  // ---------- 合成 ----------
+  function resolveItem(word) {
+    let name = ITEM_ZH[word] || word;
+    if (name === 'planks' || name === 'log') {
+      const logs = bot.inventory.items().filter(i => isLog(i.name));
+      const wood = logs.length ? logs[0].name.replace(/_log$|_stem$/, '') : 'oak';
+      name = name === 'planks' ? `${wood}_planks` : `${wood}_log`;
+    }
+    return reg.itemsByName[name] ? name : null;
+  }
+
+  async function placeNearby(itemName) {
+    const item = bot.inventory.items().find(i => i.name === itemName);
+    if (!item) return null;
+    const base = bot.entity.position.floored();
+    for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [2, 0], [0, 2]]) {
+      const below = bot.blockAt(base.offset(dx, -1, dz));
+      const spot = bot.blockAt(base.offset(dx, 0, dz));
+      const above = bot.blockAt(base.offset(dx, 1, dz));
+      if (!below || !spot || below.boundingBox !== 'block' || spot.name !== 'air' || !above || above.name !== 'air') continue;
+      await bot.equip(item, 'hand');
+      try {
+        await bot.placeBlock(below, new Vec3(0, 1, 0));
+      } catch (_) { /* 有時伺服器延遲回報，改以實際方塊判斷 */ }
+      await sleep(300);
+      const placed = bot.blockAt(spot.position);
+      if (placed && placed.name === itemName) return placed;
+    }
+    return null;
+  }
+
+  async function ensureTable() {
+    let table = bot.findBlock({ matching: reg.blocksByName.crafting_table.id, maxDistance: 16 });
+    if (!table) {
+      if (count('crafting_table') === 0 && !(await craft('crafting_table', 1, 1))) return null;
+      table = await placeNearby('crafting_table');
+      if (!table) return null;
+      say('我放了一個工作台');
+    }
+    if (bot.entity.position.distanceTo(table.position) > 3.5) {
+      await bot.pathfinder.goto(new goals.GoalNear(table.position.x, table.position.y, table.position.z, 2));
+    }
+    return table;
+  }
+
+  // 遞迴合成：缺材料時先合成材料（例如 原木 → 木板 → 木棒）
+  async function craft(name, want, depth = 0) {
+    checkCancel();
+    const item = reg.itemsByName[name];
+    if (!item) return false;
+    const have = count(name);
+    if (have >= want) return true;
+    if (depth > 4) return false;
+    const recipes = bot.recipesAll(item.id, null, true);
+    if (recipes.length === 0) return false;
+
+    const missingOf = r => {
+      let m = 0;
+      for (const d of r.delta) if (d.count < 0 && count(reg.items[d.id].name) < -d.count) m++;
+      return m;
+    };
+    const sorted = [...recipes].sort((a, b) => missingOf(a) - missingOf(b));
+    const tried = new Set();
+
+    for (const r of sorted) {
+      const key = r.delta.map(d => d.id + ':' + d.count).join(',');
+      if (tried.has(key)) continue;
+      tried.add(key);
+      const times = Math.ceil((want - count(name)) / r.result.count);
+      let ok = true;
+      for (const d of r.delta) {
+        if (d.count >= 0) continue;
+        const ingName = reg.items[d.id].name;
+        const need = -d.count * times;
+        if (count(ingName) >= need) continue;
+        if (!(await craft(ingName, need, depth + 1))) { ok = false; break; }
+      }
+      if (!ok) continue;
+      let table = null;
+      if (r.requiresTable) {
+        table = await ensureTable();
+        if (!table) return false;
+      }
+      const fresh = bot.recipesFor(item.id, null, 1, table).find(x => x.delta.map(d => d.id + ':' + d.count).join(',') === key)
+        || bot.recipesFor(item.id, null, 1, table)[0];
+      if (!fresh) continue;
+      // 透過 ViaVersion 時偶爾會等不到格子更新，重試幾次
+      for (let attempt = 0; attempt < 3; attempt++) {
+        try {
+          await bot.craft(fresh, Math.ceil((want - count(name)) / fresh.result.count), table);
+          break;
+        } catch (e) {
+          log(`合成 ${name} 第 ${attempt + 1} 次失敗：${e.message}`);
+          try { if (bot.currentWindow) bot.closeWindow(bot.currentWindow); } catch (_) {}
+          await sleep(800);
+          if (count(name) >= want) break;
+          if (attempt === 2) throw e;
+        }
+      }
+      return count(name) >= want;
+    }
+    return false;
+  }
+
+  async function ensurePickaxe(tier) {
+    const order = ['wooden', 'stone', 'iron', 'golden', 'diamond', 'netherite'];
+    const has = order.slice(order.indexOf(tier)).filter(t => t !== 'golden').some(t => count(`${t}_pickaxe`) > 0);
+    if (has) return true;
+    if (tier === 'stone' && count('cobblestone') < 3) {
+      if (!(await ensurePickaxe('wooden'))) return false;
+      say('先挖幾顆圓石做石鎬');
+      await collectBlocks(n => n === 'stone' || n === 'cobblestone', 3 - count('cobblestone'));
+    }
+    if (countMatch(isLog) === 0 && countMatch(n => n.endsWith('_planks')) < 5) {
+      say('我沒有木頭，先去砍樹');
+      await chop(3);
+    }
+    const ok = await craft(`${tier}_pickaxe`, 1);
+    if (ok) say(`做好了一把${tier === 'stone' ? '石' : '木'}鎬`);
+    return ok;
+  }
+
+  // ---------- 收成 ----------
+  async function harvest() {
+    let done = 0;
+    for (let i = 0; i < 24; i++) {
+      checkCancel();
+      const crop = bot.findBlock({
+        maxDistance: 24,
+        matching: b => {
+          if (!b || !CROPS[b.name]) return false;
+          const age = b.getProperties?.().age;
+          const max = b.name === 'beetroots' ? 3 : 7;
+          return age === max;
+        }
+      });
+      if (!crop) break;
+      const pos = crop.position.clone();
+      const seed = CROPS[crop.name];
+      try { await collectOne(crop); } catch (e) { log('收成略過：' + e.message); break; }
+      done++;
+      const farmland = bot.blockAt(pos.offset(0, -1, 0));
+      const seedItem = bot.inventory.items().find(it => it.name === seed);
+      if (farmland && farmland.name === 'farmland' && seedItem) {
+        try {
+          await bot.equip(seedItem, 'hand');
+          await bot.placeBlock(farmland, new Vec3(0, 1, 0));
+        } catch (_) {}
+      }
+    }
+    return done;
+  }
+
+  // ---------- 給東西 / 背包 ----------
+  async function giveTo(playerName, goTo, word) {
+    const ent = bot.players[playerName]?.entity;
+    if (!ent) { say(`看不到你，先用 /tp ClaudeBot ${playerName}`); return; }
+    await goTo(playerName, 2);
+    await bot.lookAt(ent.position.offset(0, 1.6, 0), true);
+    let items = bot.inventory.items();
+    if (word) {
+      const name = resolveItem(word) || word;
+      items = items.filter(i => i.name === name || (word === '原木' && isLog(i.name)) || (word === '木板' && i.name.endsWith('_planks')));
+    }
+    if (items.length === 0) { say('我身上沒有這個'); return; }
+    for (const it of items) { await bot.tossStack(it); await sleep(150); }
+    say('給你！');
+  }
+
+  function inventorySummary() {
+    const totals = {};
+    for (const i of bot.inventory.items()) totals[i.name] = (totals[i.name] || 0) + i.count;
+    const list = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+    if (list.length === 0) return '我的背包是空的';
+    return '背包：' + list.slice(0, 10).map(([n, c]) => `${n}×${c}`).join('、') + (list.length > 10 ? ' …' : '');
+  }
+
+  return {
+    busy: () => busy,
+    stop,
+    inventorySummary,
+    chop: n => run('砍樹', async () => {
+      say(`去砍 ${n} 塊原木`);
+      const got = await chop(n);
+      say(got > 0 ? `砍好了，拿到 ${got} 塊原木` : '附近找不到樹耶');
+    }),
+    mine: (word, n) => run('挖礦', async () => {
+      const spec = ORE_ZH[word];
+      if (!spec) { say(`我會挖：${Object.keys(ORE_ZH).join('、')}`); return; }
+      if (spec.tier && !(await ensurePickaxe(spec.tier))) { say('做不出鎬子，缺材料'); return; }
+      say(`去挖 ${n} 個${word}`);
+      const got = await collectBlocks(nm => spec.blocks.includes(nm), n, 32);
+      if (got === 0) say(`附近 32 格內找不到${word}`);
+      else say(`挖好了（${got} 個）。${word === '鐵' || word === '銅' ? '不過我還不會燒礦，原礦要你拿去熔爐。' : ''}`);
+    }),
+    craft: (word, n) => run('合成', async () => {
+      const name = resolveItem(word);
+      if (!name) { say(`我不認得「${word}」，可以打英文 ID，例如 !做 wooden_pickaxe`); return; }
+      const target = count(name) + n;
+      if (await craft(name, target)) say(`做好了：${word} ×${n}`);
+      else {
+        const hint = /stone|cobble|furnace|石|熔爐/.test(name) ? '圓石（!挖礦 石頭）' : '木頭（!砍樹）';
+        say(`做不出 ${word}，材料不夠，可能需要${hint}`);
+      }
+    }),
+    harvest: () => run('收成', async () => {
+      const n = await harvest();
+      say(n > 0 ? `收成了 ${n} 株作物，有種子的都補種回去了` : '附近 24 格內沒有成熟的作物');
+    }),
+    give: (player, goTo, word) => run('交貨', () => giveTo(player, goTo, word))
+  };
+};
