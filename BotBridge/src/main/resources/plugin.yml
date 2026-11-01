@@ -1,6 +1,6 @@
 name: BotBridge
 version: '${project.version}'
-main: xyz.teacafe.botbridge.BotBridgePlugin
+main: io.github.jun32036.botbridge.BotBridgePlugin
 api-version: '26.3'
 description: /bot 指令，把玩家的要求轉交給測試機器人 ClaudeBot
 author: 萊森

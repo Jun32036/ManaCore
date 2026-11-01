@@ -5,7 +5,7 @@
 伺服器核心：DivineMC 26.3（Paper 分支）　Java 25　建置：`mvn package`（JDK 25 + Maven），輸出 `target/ManaCore-1.3.0.jar`（會先跑單元測試）
 依賴：paper-api 26.3.build.231-stable（provided）、sqlite-jdbc 3.54.1.0（plugin.yml `libraries:` 執行時自動下載）
 
-## 原始碼結構（xyz.teacafe.manacore）
+## 原始碼結構（io.github.jun32036.manacore）
 
 | 檔案 | 職責 |
 | --- | --- |

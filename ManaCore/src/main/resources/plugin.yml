@@ -1,10 +1,9 @@
 name: ManaCore
 version: '${project.version}'
-main: xyz.teacafe.manacore.ManaCorePlugin
+main: io.github.jun32036.manacore.ManaCorePlugin
 api-version: '26.3'
 description: 生生不息 mana 核心：互動與生活手藝產生 mana、城鎮訂單、委託板、社區工程、歸土、生命之樹
 author: 萊森
-website: mc.teacafe.xyz
 libraries:
   - org.xerial:sqlite-jdbc:3.54.1.0
 
