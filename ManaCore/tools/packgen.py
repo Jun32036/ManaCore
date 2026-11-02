@@ -14,13 +14,16 @@ PREVIEW = sys.argv[2] if len(sys.argv) > 2 else None
 FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 NS = 'manacore'
 
-BASE = (22, 26, 38)          # 面板底色
-BASE2 = (30, 35, 50)
-BORDER = (64, 72, 96)
-SLOT = (32, 38, 54)
-SLOT_B = (48, 55, 76)
-SLOT_DIM = (27, 32, 45)
-TEXT_STRIP = (44, 50, 68)
+# 灰色系：面板中灰、格子和原版相近的灰色凸面（深色物品才看得到），磁磚與按鈕用較深的灰藍
+BASE = (108, 112, 122)       # 面板底色
+BASE2 = (96, 100, 110)
+BORDER = (40, 43, 50)
+SLOT = (139, 141, 148)       # 格子底（接近原版 #8B8B8B）
+SLOT_DARK = (62, 65, 74)     # 格子左上陰影
+SLOT_LIGHT = (208, 211, 217) # 格子右下亮邊
+SLOT_B = SLOT_DARK
+SLOT_DIM = (124, 127, 135)
+TEXT_STRIP = (90, 94, 104)
 ACCENTS = {'self': (104, 214, 128), 'social': (236, 128, 180), 'life': (86, 196, 236), 'alchemy': (178, 118, 240), 'info': (150, 160, 184)}
 ACCENT_ORDER = ['self', 'social', 'life', 'alchemy', 'info']
 
@@ -48,12 +51,14 @@ def background(rows, accent):
     d.rectangle((1, 10, W - 2, 15), fill=head)
     d.line((2, 16, W - 3, 16), fill=blend(BASE, accent, 0.7))
     d.line((2, 17, W - 3, 17), fill=blend(BASE, accent, 0.25))
-    # 標題列（第 0 列）淡一點，內容列正常
+    # 格子：原版式凸面（左上暗、右下亮），標題列（第 0 列）淡一點
     for r in range(rows):
         for c in range(9):
             x, y = 8 + c * 18, 18 + r * 18
             fill = SLOT_DIM if r == 0 else SLOT
-            d.rounded_rectangle((x - 1, y - 1, x + 16, y + 16), radius=2, fill=fill, outline=SLOT_B if r else blend(SLOT_B, BASE, 0.4))
+            d.rectangle((x - 1, y - 1, x + 16, y + 16), fill=fill)
+            d.line((x - 1, y - 1, x + 16, y - 1), fill=SLOT_DARK); d.line((x - 1, y - 1, x - 1, y + 16), fill=SLOT_DARK)
+            d.line((x - 1, y + 16, x + 16, y + 16), fill=SLOT_LIGHT); d.line((x + 16, y - 1, x + 16, y + 16), fill=SLOT_LIGHT)
     return img
 
 # ---------------- 圖示磁磚 ----------------
@@ -83,8 +88,8 @@ def tile(symbol, color, glow=False):
     S = 32
     img = Image.new('RGBA', (S, S), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    d.rounded_rectangle((1, 1, S - 2, S - 2), radius=7, fill=(36, 42, 60), outline=(74, 84, 112))
-    d.rounded_rectangle((2, 2, S - 3, S - 3), radius=6, outline=(50, 58, 80))
+    d.rounded_rectangle((1, 1, S - 2, S - 2), radius=7, fill=(52, 57, 70), outline=(28, 31, 38))
+    d.rounded_rectangle((2, 2, S - 3, S - 3), radius=6, outline=(78, 86, 104))
     # 上方微光
     for y in range(3, 12):
         a = int(26 * (1 - (y - 3) / 9))
@@ -118,8 +123,8 @@ def gem():
 def button(state):
     img = Image.new('RGBA', (200, 20), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    fill = {'normal': (40, 46, 66), 'hover': (58, 92, 128), 'disabled': (28, 31, 42)}[state]
-    outline = {'normal': (84, 94, 124), 'hover': (120, 200, 240), 'disabled': (48, 52, 66)}[state]
+    fill = {'normal': (84, 88, 100), 'hover': (96, 128, 164), 'disabled': (64, 66, 74)}[state]
+    outline = {'normal': (34, 37, 44), 'hover': (150, 210, 240), 'disabled': (44, 46, 52)}[state]
     d.rounded_rectangle((0, 0, 199, 19), radius=4, fill=fill, outline=outline)
     for y in range(1, 8):
         d.line((2, y, 197, y), fill=(255, 255, 255, int(22 * (1 - y / 8))))
@@ -139,11 +144,8 @@ def tooltip_frame():
     return img
 
 def list_bg(dark):
-    img = Image.new('RGBA', (16, 16), (16, 18, 26, 255) if dark else (24, 27, 38, 255))
-    d = ImageDraw.Draw(img)
-    for i in range(0, 16, 4):
-        d.point((i, 0), fill=(28, 32, 44, 255))
-    return img
+    # 半透明灰：遊戲世界會透出來，不會變成一片黑
+    return Image.new('RGBA', (16, 16), (70, 74, 84, 150) if dark else (90, 94, 104, 120))
 
 # ---------------- 組裝 ----------------
 providers = []
@@ -182,9 +184,8 @@ for name, st in (('button', 'normal'), ('button_highlighted', 'hover'), ('button
 tip = json.dumps({'gui': {'scaling': {'type': 'nine_slice', 'width': 100, 'height': 100, 'border': 9}}})
 put_png('assets/minecraft/textures/gui/sprites/tooltip/background.png', tooltip_bg()); put_text('assets/minecraft/textures/gui/sprites/tooltip/background.png.mcmeta', tip)
 put_png('assets/minecraft/textures/gui/sprites/tooltip/frame.png', tooltip_frame()); put_text('assets/minecraft/textures/gui/sprites/tooltip/frame.png.mcmeta', tip)
-put_png('assets/minecraft/textures/gui/menu_list_background.png', list_bg(True))
-put_png('assets/minecraft/textures/gui/inworld_menu_list_background.png', list_bg(False))
-put_png('assets/minecraft/textures/gui/menu_background.png', list_bg(True))
+# 只改遊戲中（有世界在後面）的選單背景；標題畫面等不在世界裡的選單維持原版
+put_png('assets/minecraft/textures/gui/inworld_menu_list_background.png', list_bg(True))
 put_png('assets/minecraft/textures/gui/inworld_menu_background.png', list_bg(False))
 
 put_text('pack.mcmeta', json.dumps({'pack': {'pack_format': 97, 'min_format': [97, 0], 'max_format': [99, 99], 'description': 'ManaCore 介面'}}, ensure_ascii=False))

@@ -76,7 +76,7 @@ public final class Dialogs {
     }
 
     private static DialogBody item(ItemStack it, String mm) {
-        return DialogBody.item(it).description(DialogBody.plainMessage(Msg.mm(mm), WIDE - 40)).showDecorations(false).showTooltip(true).build();
+        return DialogBody.item(it).description(DialogBody.plainMessage(Msg.mm(mm), WIDE - 40)).showDecorations(false).showTooltip(false).build();
     }
 
     private void show(Player p, String title, List<DialogBody> body, List<DialogInput> inputs, List<ActionButton> buttons, int columns, ActionButton exit) {

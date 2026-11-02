@@ -27,7 +27,7 @@ import java.util.UUID;
 /** /mana 玩家指令 */
 public final class ManaCommand implements TabExecutor {
 
-    private static final List<String> SUBS = List.of("help", "status", "skills", "dex", "orders", "board", "request", "projects", "alchemy", "market", "sell",
+    private static final List<String> SUBS = List.of("help", "menu", "chest", "status", "skills", "dex", "orders", "board", "request", "projects", "alchemy", "market", "sell",
             "give", "donate", "tree", "work", "comment", "comments", "mentor", "log");
 
     private final ManaCorePlugin plugin;
@@ -102,7 +102,7 @@ public final class ManaCommand implements TabExecutor {
     private void help(Player p) {
         String[] lines = {
                 "<green>── 生生不息 · mana ──</green>",
-                "<white>/mana</white> <gray>打開 mana 選單（大部分功能都能用點的）</gray>",
+                "<white>/mana</white> 或 <white>/mana menu</white> <gray>打開 mana 選單（大部分功能都能用點的）</gray>",
                 "<white>/mana status</white> <gray>用文字顯示 mana 與今天的進度</gray>",
                 "<white>/mana skills</white> <gray>生活手藝：等級、新鮮度、今天的收入</gray>",
                 "<white>/mana dex</white> <gray>圖鑑：第一次做到的事都有 mana</gray>",
