@@ -1,0 +1,24 @@
+{
+	"schemaVersion": 1,
+	"id": "manacore",
+	"version": "${version}",
+	"name": "ManaCore",
+	"description": "讓原版生存不再無聊：採集、種植、畜牧、釣魚、烹飪、建造、探索，每件事都有意義、有價值。",
+	"authors": ["jun32036"],
+	"contact": {
+		"sources": "https://github.com/jun32036/manacore"
+	},
+	"icon": "assets/manacore/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": ["io.github.jun32036.manacore.ManaCore"],
+		"client": ["io.github.jun32036.manacore.client.ManaCoreClient"]
+	},
+	"mixins": ["manacore.mixins.json"],
+	"depends": {
+		"fabricloader": ">=0.20.1",
+		"minecraft": "~26.3",
+		"java": ">=25",
+		"fabric-api": "*"
+	}
+}

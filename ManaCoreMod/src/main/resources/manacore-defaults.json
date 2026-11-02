@@ -1,0 +1,1716 @@
+{
+ "_說明": "ManaCore 單人模組設定。「一天」是遊戲內的一天（20 分鐘）。改完存檔，重新進入世界生效。",
+ "dayCaps": {
+  "craft": 12,
+  "craftPerSkill": 5,
+  "dex": 15,
+  "order": 24,
+  "explore": 15,
+  "villager": 12
+ },
+ "craft": {
+  "pointsPerMana": 10,
+  "freshness": {
+   "decayPerPoint": 0.005,
+   "floor": 0.3,
+   "recoverPerMinute": 0.02
+  },
+  "variety": {
+   "window": 32,
+   "base": 0.5,
+   "perDistinct": 0.125
+  },
+  "levels": [
+   0,
+   40,
+   120,
+   260,
+   480,
+   800,
+   1250,
+   1850,
+   2600,
+   3500
+  ],
+  "titles": [
+   "見習",
+   "入門",
+   "熟練",
+   "老手",
+   "匠人",
+   "名匠",
+   "大師",
+   "宗師",
+   "傳說",
+   "生生不息"
+  ],
+  "points": {
+   "crop": 1,
+   "melon-pumpkin": 1,
+   "cane-cactus": 0.5,
+   "bamboo": 0.25,
+   "berry": 1,
+   "ore-default": 1,
+   "log": 0.5,
+   "fish": 3,
+   "treasure": 5,
+   "junk": 1,
+   "breed": 3,
+   "shear": 1,
+   "tame": 5,
+   "smelt-food": 0.5,
+   "dish-default": 1,
+   "build-block": 0.25
+  },
+  "ores": {
+   "coal_ore": 1,
+   "copper_ore": 1,
+   "iron_ore": 1.5,
+   "gold_ore": 2,
+   "nether_gold_ore": 1,
+   "nether_quartz_ore": 1,
+   "redstone_ore": 1.5,
+   "lapis_ore": 2,
+   "diamond_ore": 5,
+   "emerald_ore": 5,
+   "ancient_debris": 8,
+   "amethyst_cluster": 1
+  },
+  "dishes": {
+   "cake": 4,
+   "pumpkin_pie": 2,
+   "rabbit_stew": 3,
+   "mushroom_stew": 2,
+   "beetroot_soup": 2,
+   "suspicious_stew": 2,
+   "golden_carrot": 1.5,
+   "cookie": 1.5,
+   "bread": 1
+  },
+  "passives": {
+   "farm": {
+    "perLevel": 0.04,
+    "max": 0.36
+   },
+   "gather": {
+    "perLevel": 0.03,
+    "max": 0.27
+   },
+   "husbandry": {
+    "perLevel": 0.04,
+    "max": 0.36
+   },
+   "fishing": {
+    "perLevel": 0.04,
+    "max": 0.36
+   },
+   "cooking": {
+    "perLevel": 0.04,
+    "max": 0.36
+   },
+   "build": {
+    "perLevel": 0.02,
+    "max": 0.18
+   }
+  }
+ },
+ "dex": {
+  "amounts": {
+   "fish": 2,
+   "crop": 2,
+   "animal": 3,
+   "tame": 5,
+   "dish": 2,
+   "gather": 2,
+   "craft": 1,
+   "boss": 10
+  },
+  "craftPerDay": 4,
+  "milestoneEvery": 10,
+  "milestoneBonus": 5
+ },
+ "advancement": {
+  "task": 5,
+  "goal": 15,
+  "challenge": 40,
+  "overrides": {
+   "minecraft:end/kill_dragon": 60,
+   "minecraft:end/respawn_dragon": 30,
+   "minecraft:nether/all_effects": 100,
+   "minecraft:adventure/adventuring_time": 80,
+   "minecraft:husbandry/balanced_diet": 60,
+   "minecraft:husbandry/complete_catalogue": 50,
+   "minecraft:nether/all_potions": 50,
+   "minecraft:nether/create_full_beacon": 50,
+   "minecraft:nether/uneasy_alliance": 40,
+   "minecraft:adventure/kill_all_mobs": 50,
+   "minecraft:adventure/two_birds_one_arrow": 30,
+   "minecraft:adventure/hero_of_the_village": 40,
+   "minecraft:husbandry/bred_all_animals": 50
+  }
+ },
+ "explore": {
+  "biome": 3,
+  "structure": 5,
+  "structureOverrides": {
+   "minecraft:ancient_city": 10,
+   "minecraft:trial_chambers": 8,
+   "minecraft:end_city": 10,
+   "minecraft:woodland_mansion": 10
+  }
+ },
+ "orders": {
+  "perDay": 4,
+  "maxPerSkill": 1,
+  "pool": [
+   {
+    "id": "bread",
+    "item": "bread",
+    "amount": 16,
+    "reward": 4,
+    "skill": "cooking",
+    "level": 1
+   },
+   {
+    "id": "baked_potato",
+    "item": "baked_potato",
+    "amount": 32,
+    "reward": 4,
+    "skill": "cooking",
+    "level": 1
+   },
+   {
+    "id": "cooked_salmon",
+    "item": "cooked_salmon",
+    "amount": 16,
+    "reward": 5,
+    "skill": "cooking",
+    "level": 1
+   },
+   {
+    "id": "cookie",
+    "item": "cookie",
+    "amount": 32,
+    "reward": 4,
+    "skill": "cooking",
+    "level": 1
+   },
+   {
+    "id": "mushroom_stew",
+    "item": "mushroom_stew",
+    "amount": 4,
+    "reward": 4,
+    "skill": "cooking",
+    "level": 1
+   },
+   {
+    "id": "pumpkin_pie",
+    "item": "pumpkin_pie",
+    "amount": 8,
+    "reward": 6,
+    "skill": "cooking",
+    "level": 2
+   },
+   {
+    "id": "cake",
+    "item": "cake",
+    "amount": 2,
+    "reward": 6,
+    "skill": "cooking",
+    "level": 2
+   },
+   {
+    "id": "golden_carrot",
+    "item": "golden_carrot",
+    "amount": 8,
+    "reward": 8,
+    "skill": "cooking",
+    "level": 3
+   },
+   {
+    "id": "rabbit_stew",
+    "item": "rabbit_stew",
+    "amount": 3,
+    "reward": 8,
+    "skill": "cooking",
+    "level": 3
+   },
+   {
+    "id": "cod",
+    "item": "cod",
+    "amount": 16,
+    "reward": 4,
+    "skill": "fishing",
+    "level": 1
+   },
+   {
+    "id": "salmon",
+    "item": "salmon",
+    "amount": 12,
+    "reward": 4,
+    "skill": "fishing",
+    "level": 1
+   },
+   {
+    "id": "tropical_fish",
+    "item": "tropical_fish",
+    "amount": 4,
+    "reward": 5,
+    "skill": "fishing",
+    "level": 1
+   },
+   {
+    "id": "pufferfish",
+    "item": "pufferfish",
+    "amount": 3,
+    "reward": 5,
+    "skill": "fishing",
+    "level": 2
+   },
+   {
+    "id": "nautilus_shell",
+    "item": "nautilus_shell",
+    "amount": 1,
+    "reward": 8,
+    "skill": "fishing",
+    "level": 3
+   },
+   {
+    "id": "wheat",
+    "item": "wheat",
+    "amount": 64,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "carrot",
+    "item": "carrot",
+    "amount": 64,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "potato",
+    "item": "potato",
+    "amount": 64,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "beetroot",
+    "item": "beetroot",
+    "amount": 32,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "pumpkin",
+    "item": "pumpkin",
+    "amount": 16,
+    "reward": 4,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "melon_slice",
+    "item": "melon_slice",
+    "amount": 64,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "sugar_cane",
+    "item": "sugar_cane",
+    "amount": 64,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "sweet_berries",
+    "item": "sweet_berries",
+    "amount": 32,
+    "reward": 3,
+    "skill": "farm",
+    "level": 1
+   },
+   {
+    "id": "cocoa_beans",
+    "item": "cocoa_beans",
+    "amount": 32,
+    "reward": 4,
+    "skill": "farm",
+    "level": 2
+   },
+   {
+    "id": "nether_wart",
+    "item": "nether_wart",
+    "amount": 32,
+    "reward": 5,
+    "skill": "farm",
+    "level": 3
+   },
+   {
+    "id": "white_wool",
+    "item": "white_wool",
+    "amount": 32,
+    "reward": 4,
+    "skill": "husbandry",
+    "level": 1
+   },
+   {
+    "id": "leather",
+    "item": "leather",
+    "amount": 12,
+    "reward": 4,
+    "skill": "husbandry",
+    "level": 1
+   },
+   {
+    "id": "egg",
+    "item": "egg",
+    "amount": 16,
+    "reward": 3,
+    "skill": "husbandry",
+    "level": 1
+   },
+   {
+    "id": "feather",
+    "item": "feather",
+    "amount": 24,
+    "reward": 3,
+    "skill": "husbandry",
+    "level": 1
+   },
+   {
+    "id": "honey_bottle",
+    "item": "honey_bottle",
+    "amount": 4,
+    "reward": 5,
+    "skill": "husbandry",
+    "level": 2
+   },
+   {
+    "id": "rabbit_hide",
+    "item": "rabbit_hide",
+    "amount": 8,
+    "reward": 5,
+    "skill": "husbandry",
+    "level": 2
+   },
+   {
+    "id": "coal",
+    "item": "coal",
+    "amount": 32,
+    "reward": 3,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "raw_iron",
+    "item": "raw_iron",
+    "amount": 24,
+    "reward": 4,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "raw_copper",
+    "item": "raw_copper",
+    "amount": 48,
+    "reward": 3,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "redstone",
+    "item": "redstone",
+    "amount": 32,
+    "reward": 4,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "lapis_lazuli",
+    "item": "lapis_lazuli",
+    "amount": 24,
+    "reward": 4,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "amethyst_shard",
+    "item": "amethyst_shard",
+    "amount": 16,
+    "reward": 4,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "oak_log",
+    "item": "oak_log",
+    "amount": 64,
+    "reward": 3,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "spruce_log",
+    "item": "spruce_log",
+    "amount": 64,
+    "reward": 3,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "birch_log",
+    "item": "birch_log",
+    "amount": 64,
+    "reward": 3,
+    "skill": "gather",
+    "level": 1
+   },
+   {
+    "id": "quartz",
+    "item": "quartz",
+    "amount": 32,
+    "reward": 5,
+    "skill": "gather",
+    "level": 2
+   },
+   {
+    "id": "diamond",
+    "item": "diamond",
+    "amount": 2,
+    "reward": 8,
+    "skill": "gather",
+    "level": 4
+   },
+   {
+    "id": "stone_bricks",
+    "item": "stone_bricks",
+    "amount": 64,
+    "reward": 4,
+    "skill": "build",
+    "level": 1
+   },
+   {
+    "id": "bricks",
+    "item": "bricks",
+    "amount": 64,
+    "reward": 5,
+    "skill": "build",
+    "level": 1
+   },
+   {
+    "id": "glass",
+    "item": "glass",
+    "amount": 64,
+    "reward": 4,
+    "skill": "build",
+    "level": 1
+   },
+   {
+    "id": "smooth_stone",
+    "item": "smooth_stone",
+    "amount": 64,
+    "reward": 4,
+    "skill": "build",
+    "level": 1
+   },
+   {
+    "id": "terracotta",
+    "item": "terracotta",
+    "amount": 64,
+    "reward": 4,
+    "skill": "build",
+    "level": 1
+   },
+   {
+    "id": "lantern",
+    "item": "lantern",
+    "amount": 8,
+    "reward": 5,
+    "skill": "build",
+    "level": 2
+   },
+   {
+    "id": "bookshelf",
+    "item": "bookshelf",
+    "amount": 4,
+    "reward": 6,
+    "skill": "build",
+    "level": 3
+   }
+  ]
+ },
+ "villager": {
+  "chancePerDay": 0.5,
+  "maxActive": 3,
+  "radius": 48,
+  "requests": {
+   "farmer": [
+    {
+     "item": "bread",
+     "amount": 6,
+     "reward": 4
+    },
+    {
+     "item": "pumpkin_pie",
+     "amount": 3,
+     "reward": 5
+    },
+    {
+     "item": "bone_meal",
+     "amount": 16,
+     "reward": 3
+    }
+   ],
+   "fisherman": [
+    {
+     "item": "cooked_cod",
+     "amount": 6,
+     "reward": 4
+    },
+    {
+     "item": "cooked_salmon",
+     "amount": 4,
+     "reward": 5
+    },
+    {
+     "item": "string",
+     "amount": 10,
+     "reward": 3
+    }
+   ],
+   "shepherd": [
+    {
+     "item": "white_wool",
+     "amount": 12,
+     "reward": 4
+    },
+    {
+     "item": "shears",
+     "amount": 1,
+     "reward": 3
+    }
+   ],
+   "butcher": [
+    {
+     "item": "cooked_beef",
+     "amount": 6,
+     "reward": 4
+    },
+    {
+     "item": "cooked_porkchop",
+     "amount": 6,
+     "reward": 4
+    },
+    {
+     "item": "coal",
+     "amount": 12,
+     "reward": 3
+    }
+   ],
+   "librarian": [
+    {
+     "item": "paper",
+     "amount": 18,
+     "reward": 4
+    },
+    {
+     "item": "book",
+     "amount": 3,
+     "reward": 5
+    },
+    {
+     "item": "bookshelf",
+     "amount": 1,
+     "reward": 5
+    }
+   ],
+   "mason": [
+    {
+     "item": "stone_bricks",
+     "amount": 32,
+     "reward": 4
+    },
+    {
+     "item": "bricks",
+     "amount": 16,
+     "reward": 4
+    },
+    {
+     "item": "polished_andesite",
+     "amount": 32,
+     "reward": 4
+    }
+   ],
+   "toolsmith": [
+    {
+     "item": "iron_ingot",
+     "amount": 6,
+     "reward": 5
+    },
+    {
+     "item": "iron_pickaxe",
+     "amount": 1,
+     "reward": 5
+    }
+   ],
+   "weaponsmith": [
+    {
+     "item": "iron_ingot",
+     "amount": 6,
+     "reward": 5
+    },
+    {
+     "item": "flint",
+     "amount": 8,
+     "reward": 3
+    }
+   ],
+   "armorer": [
+    {
+     "item": "iron_ingot",
+     "amount": 8,
+     "reward": 5
+    },
+    {
+     "item": "lava_bucket",
+     "amount": 1,
+     "reward": 4
+    }
+   ],
+   "cleric": [
+    {
+     "item": "rotten_flesh",
+     "amount": 16,
+     "reward": 3
+    },
+    {
+     "item": "glass_bottle",
+     "amount": 6,
+     "reward": 3
+    },
+    {
+     "item": "redstone",
+     "amount": 12,
+     "reward": 4
+    }
+   ],
+   "cartographer": [
+    {
+     "item": "paper",
+     "amount": 18,
+     "reward": 4
+    },
+    {
+     "item": "glass_pane",
+     "amount": 12,
+     "reward": 4
+    }
+   ],
+   "fletcher": [
+    {
+     "item": "stick",
+     "amount": 32,
+     "reward": 3
+    },
+    {
+     "item": "feather",
+     "amount": 12,
+     "reward": 4
+    },
+    {
+     "item": "arrow",
+     "amount": 16,
+     "reward": 4
+    }
+   ],
+   "leatherworker": [
+    {
+     "item": "leather",
+     "amount": 6,
+     "reward": 5
+    }
+   ],
+   "none": [
+    {
+     "item": "apple",
+     "amount": 4,
+     "reward": 3
+    },
+    {
+     "item": "torch",
+     "amount": 16,
+     "reward": 3
+    }
+   ],
+   "nitwit": [
+    {
+     "item": "cookie",
+     "amount": 8,
+     "reward": 3
+    }
+   ]
+  }
+ },
+ "altar": [
+  {
+   "id": "stone",
+   "name": "石材",
+   "icon": "stone_bricks",
+   "discount": true,
+   "items": [
+    {
+     "item": "cobblestone",
+     "amount": 64,
+     "price": 4
+    },
+    {
+     "item": "stone",
+     "amount": 64,
+     "price": 6
+    },
+    {
+     "item": "stone_bricks",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "smooth_stone",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "andesite",
+     "amount": 64,
+     "price": 5
+    },
+    {
+     "item": "polished_andesite",
+     "amount": 64,
+     "price": 7
+    },
+    {
+     "item": "granite",
+     "amount": 64,
+     "price": 5
+    },
+    {
+     "item": "polished_granite",
+     "amount": 64,
+     "price": 7
+    },
+    {
+     "item": "diorite",
+     "amount": 64,
+     "price": 5
+    },
+    {
+     "item": "polished_diorite",
+     "amount": 64,
+     "price": 7
+    },
+    {
+     "item": "deepslate",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "cobbled_deepslate",
+     "amount": 64,
+     "price": 6
+    },
+    {
+     "item": "polished_deepslate",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "deepslate_bricks",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "deepslate_tiles",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "tuff",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "polished_tuff",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "tuff_bricks",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "calcite",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "sandstone",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "smooth_sandstone",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "red_sandstone",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "bricks",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "mud_bricks",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "quartz_block",
+     "amount": 64,
+     "price": 20
+    },
+    {
+     "item": "smooth_quartz",
+     "amount": 64,
+     "price": 20
+    },
+    {
+     "item": "prismarine",
+     "amount": 64,
+     "price": 18
+    },
+    {
+     "item": "dark_prismarine",
+     "amount": 64,
+     "price": 22
+    },
+    {
+     "item": "blackstone",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "polished_blackstone_bricks",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "basalt",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "nether_bricks",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "end_stone_bricks",
+     "amount": 64,
+     "price": 18
+    },
+    {
+     "item": "purpur_block",
+     "amount": 64,
+     "price": 18
+    },
+    {
+     "item": "obsidian",
+     "amount": 64,
+     "price": 24
+    }
+   ]
+  },
+  {
+   "id": "wood",
+   "name": "木材",
+   "icon": "oak_log",
+   "discount": true,
+   "items": [
+    {
+     "item": "oak_log",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "spruce_log",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "birch_log",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "jungle_log",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "acacia_log",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "dark_oak_log",
+     "amount": 64,
+     "price": 14
+    },
+    {
+     "item": "mangrove_log",
+     "amount": 64,
+     "price": 16
+    },
+    {
+     "item": "cherry_log",
+     "amount": 64,
+     "price": 16
+    },
+    {
+     "item": "pale_oak_log",
+     "amount": 64,
+     "price": 16
+    },
+    {
+     "item": "bamboo_block",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "bamboo_mosaic",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "crimson_stem",
+     "amount": 64,
+     "price": 16
+    },
+    {
+     "item": "warped_stem",
+     "amount": 64,
+     "price": 16
+    },
+    {
+     "item": "oak_sapling",
+     "amount": 16,
+     "price": 4
+    }
+   ]
+  },
+  {
+   "id": "color",
+   "name": "混凝土、陶土與羊毛",
+   "icon": "white_concrete",
+   "discount": true,
+   "items": [
+    {
+     "item": "white_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "light_gray_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "gray_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "black_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "red_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "blue_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "cyan_concrete",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "terracotta",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "white_terracotta",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "light_gray_terracotta",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "brown_terracotta",
+     "amount": 64,
+     "price": 12
+    },
+    {
+     "item": "white_wool",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "light_gray_wool",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "gray_wool",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "black_wool",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "red_wool",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "white_dye",
+     "amount": 16,
+     "price": 4
+    },
+    {
+     "item": "black_dye",
+     "amount": 16,
+     "price": 4
+    },
+    {
+     "item": "red_dye",
+     "amount": 16,
+     "price": 4
+    },
+    {
+     "item": "blue_dye",
+     "amount": 16,
+     "price": 4
+    },
+    {
+     "item": "green_dye",
+     "amount": 16,
+     "price": 4
+    },
+    {
+     "item": "yellow_dye",
+     "amount": 16,
+     "price": 4
+    }
+   ]
+  },
+  {
+   "id": "glass_light",
+   "name": "玻璃、光源與銅",
+   "icon": "lantern",
+   "discount": true,
+   "items": [
+    {
+     "item": "glass",
+     "amount": 64,
+     "price": 15
+    },
+    {
+     "item": "glass_pane",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "tinted_glass",
+     "amount": 64,
+     "price": 20
+    },
+    {
+     "item": "white_stained_glass",
+     "amount": 64,
+     "price": 16
+    },
+    {
+     "item": "lantern",
+     "amount": 16,
+     "price": 10
+    },
+    {
+     "item": "soul_lantern",
+     "amount": 16,
+     "price": 12
+    },
+    {
+     "item": "sea_lantern",
+     "amount": 16,
+     "price": 16
+    },
+    {
+     "item": "glowstone",
+     "amount": 16,
+     "price": 10
+    },
+    {
+     "item": "shroomlight",
+     "amount": 16,
+     "price": 12
+    },
+    {
+     "item": "end_rod",
+     "amount": 16,
+     "price": 10
+    },
+    {
+     "item": "pearlescent_froglight",
+     "amount": 8,
+     "price": 12
+    },
+    {
+     "item": "torch",
+     "amount": 64,
+     "price": 3
+    },
+    {
+     "item": "copper_block",
+     "amount": 16,
+     "price": 10
+    },
+    {
+     "item": "cut_copper",
+     "amount": 16,
+     "price": 10
+    },
+    {
+     "item": "waxed_oxidized_copper",
+     "amount": 16,
+     "price": 14
+    },
+    {
+     "item": "waxed_oxidized_cut_copper",
+     "amount": 16,
+     "price": 14
+    }
+   ]
+  },
+  {
+   "id": "farm",
+   "name": "農作與食物",
+   "icon": "wheat",
+   "discount": false,
+   "items": [
+    {
+     "item": "wheat_seeds",
+     "amount": 16,
+     "price": 1
+    },
+    {
+     "item": "carrot",
+     "amount": 16,
+     "price": 2
+    },
+    {
+     "item": "potato",
+     "amount": 16,
+     "price": 2
+    },
+    {
+     "item": "beetroot_seeds",
+     "amount": 16,
+     "price": 1
+    },
+    {
+     "item": "sweet_berries",
+     "amount": 16,
+     "price": 2
+    },
+    {
+     "item": "sugar_cane",
+     "amount": 16,
+     "price": 2
+    },
+    {
+     "item": "bamboo",
+     "amount": 16,
+     "price": 2
+    },
+    {
+     "item": "bread",
+     "amount": 16,
+     "price": 5
+    },
+    {
+     "item": "bone_meal",
+     "amount": 32,
+     "price": 6
+    },
+    {
+     "item": "hay_block",
+     "amount": 16,
+     "price": 6
+    },
+    {
+     "item": "moss_block",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "grass_block",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "oak_leaves",
+     "amount": 64,
+     "price": 6
+    },
+    {
+     "item": "azalea",
+     "amount": 8,
+     "price": 6
+    }
+   ]
+  },
+  {
+   "id": "tools",
+   "name": "工具與功能方塊",
+   "icon": "iron_pickaxe",
+   "discount": false,
+   "items": [
+    {
+     "item": "iron_pickaxe",
+     "amount": 1,
+     "price": 15
+    },
+    {
+     "item": "iron_axe",
+     "amount": 1,
+     "price": 15
+    },
+    {
+     "item": "iron_shovel",
+     "amount": 1,
+     "price": 10
+    },
+    {
+     "item": "shears",
+     "amount": 1,
+     "price": 6
+    },
+    {
+     "item": "fishing_rod",
+     "amount": 1,
+     "price": 6
+    },
+    {
+     "item": "furnace",
+     "amount": 4,
+     "price": 10
+    },
+    {
+     "item": "smoker",
+     "amount": 1,
+     "price": 6
+    },
+    {
+     "item": "crafting_table",
+     "amount": 4,
+     "price": 8
+    },
+    {
+     "item": "chest",
+     "amount": 8,
+     "price": 8
+    },
+    {
+     "item": "barrel",
+     "amount": 8,
+     "price": 8
+    },
+    {
+     "item": "scaffolding",
+     "amount": 64,
+     "price": 8
+    },
+    {
+     "item": "ladder",
+     "amount": 32,
+     "price": 6
+    },
+    {
+     "item": "oak_door",
+     "amount": 8,
+     "price": 6
+    },
+    {
+     "item": "oak_trapdoor",
+     "amount": 16,
+     "price": 6
+    },
+    {
+     "item": "oak_fence",
+     "amount": 64,
+     "price": 10
+    },
+    {
+     "item": "item_frame",
+     "amount": 8,
+     "price": 8
+    },
+    {
+     "item": "flower_pot",
+     "amount": 8,
+     "price": 4
+    },
+    {
+     "item": "white_banner",
+     "amount": 4,
+     "price": 6
+    }
+   ]
+  },
+  {
+   "id": "special",
+   "name": "特別物品",
+   "icon": "name_tag",
+   "discount": false,
+   "items": [
+    {
+     "item": "name_tag",
+     "amount": 1,
+     "price": 20
+    },
+    {
+     "item": "saddle",
+     "amount": 1,
+     "price": 15
+    },
+    {
+     "item": "firework_rocket",
+     "amount": 16,
+     "price": 10
+    },
+    {
+     "item": "music_disc_cat",
+     "amount": 1,
+     "price": 40
+    },
+    {
+     "item": "music_disc_wait",
+     "amount": 1,
+     "price": 40
+    },
+    {
+     "item": "ender_pearl",
+     "amount": 4,
+     "price": 12
+    },
+    {
+     "item": "heart_of_the_sea",
+     "amount": 1,
+     "price": 80
+    },
+    {
+     "item": "elytra",
+     "amount": 1,
+     "price": 300
+    }
+   ]
+  }
+ ],
+ "alchemy": {
+  "lossPercent": 10,
+  "learnRequired": true
+ },
+ "values": {
+  "cobblestone": 6,
+  "stone": 9,
+  "deepslate": 12,
+  "cobbled_deepslate": 9,
+  "tuff": 12,
+  "calcite": 22,
+  "dripstone_block": 12,
+  "granite": 8,
+  "diorite": 8,
+  "andesite": 8,
+  "basalt": 12,
+  "blackstone": 15,
+  "netherrack": 2,
+  "end_stone": 20,
+  "obsidian": 38,
+  "crying_obsidian": 80,
+  "dirt": 2,
+  "grass_block": 4,
+  "mud": 3,
+  "moss_block": 10,
+  "sand": 4,
+  "red_sand": 5,
+  "gravel": 4,
+  "clay_ball": 3,
+  "flint": 8,
+  "ice": 5,
+  "packed_ice": 15,
+  "snowball": 1,
+  "soul_sand": 8,
+  "soul_soil": 8,
+  "magma_block": 20,
+  "glowstone_dust": 10,
+  "prismarine_shard": 30,
+  "prismarine_crystals": 40,
+  "sculk": 15,
+  "oak_log": 19,
+  "spruce_log": 19,
+  "birch_log": 19,
+  "jungle_log": 22,
+  "acacia_log": 22,
+  "dark_oak_log": 22,
+  "mangrove_log": 25,
+  "cherry_log": 25,
+  "pale_oak_log": 25,
+  "crimson_stem": 25,
+  "warped_stem": 25,
+  "bamboo": 2,
+  "oak_sapling": 25,
+  "spruce_sapling": 25,
+  "birch_sapling": 25,
+  "jungle_sapling": 30,
+  "acacia_sapling": 30,
+  "dark_oak_sapling": 30,
+  "mangrove_propagule": 30,
+  "cherry_sapling": 35,
+  "pale_oak_sapling": 35,
+  "azalea": 40,
+  "oak_leaves": 2,
+  "vine": 4,
+  "lily_pad": 6,
+  "cactus": 5,
+  "sugar_cane": 5,
+  "kelp": 2,
+  "seagrass": 2,
+  "brown_mushroom": 5,
+  "red_mushroom": 5,
+  "crimson_fungus": 8,
+  "warped_fungus": 8,
+  "nether_wart": 15,
+  "chorus_fruit": 20,
+  "glow_lichen": 6,
+  "spore_blossom": 60,
+  "poppy": 10,
+  "dandelion": 10,
+  "blue_orchid": 12,
+  "allium": 12,
+  "azure_bluet": 12,
+  "red_tulip": 12,
+  "orange_tulip": 12,
+  "white_tulip": 12,
+  "pink_tulip": 12,
+  "oxeye_daisy": 12,
+  "cornflower": 12,
+  "lily_of_the_valley": 12,
+  "wither_rose": 200,
+  "torchflower": 60,
+  "pitcher_plant": 60,
+  "sunflower": 15,
+  "lilac": 15,
+  "rose_bush": 15,
+  "peony": 15,
+  "pink_petals": 6,
+  "wheat": 5,
+  "wheat_seeds": 2,
+  "carrot": 5,
+  "potato": 5,
+  "beetroot": 5,
+  "beetroot_seeds": 2,
+  "melon_slice": 3,
+  "pumpkin": 25,
+  "melon": 24,
+  "sweet_berries": 5,
+  "glow_berries": 8,
+  "cocoa_beans": 8,
+  "apple": 10,
+  "egg": 10,
+  "honey_bottle": 40,
+  "honeycomb": 20,
+  "milk_bucket": 100,
+  "beef": 20,
+  "porkchop": 20,
+  "chicken": 15,
+  "mutton": 15,
+  "rabbit": 20,
+  "cod": 25,
+  "salmon": 30,
+  "tropical_fish": 60,
+  "pufferfish": 60,
+  "coal": 10,
+  "charcoal": 10,
+  "raw_copper": 6,
+  "copper_ingot": 10,
+  "raw_iron": 17,
+  "iron_ingot": 25,
+  "raw_gold": 50,
+  "gold_ingot": 60,
+  "redstone": 12,
+  "lapis_lazuli": 17,
+  "quartz": 15,
+  "amethyst_shard": 25,
+  "diamond": 400,
+  "emerald": 300,
+  "ancient_debris": 800,
+  "netherite_scrap": 800,
+  "white_wool": 16,
+  "leather": 33,
+  "feather": 10,
+  "string": 8,
+  "rabbit_hide": 30,
+  "rabbit_foot": 100,
+  "ink_sac": 10,
+  "glow_ink_sac": 40,
+  "bone": 10,
+  "rotten_flesh": 2,
+  "spider_eye": 8,
+  "gunpowder": 20,
+  "slime_ball": 25,
+  "ender_pearl": 300,
+  "blaze_rod": 150,
+  "ghast_tear": 300,
+  "phantom_membrane": 80,
+  "shulker_shell": 1500,
+  "dragon_breath": 500,
+  "nautilus_shell": 800,
+  "heart_of_the_sea": 8000,
+  "turtle_scute": 200,
+  "armadillo_scute": 100,
+  "echo_shard": 600,
+  "saddle": 500,
+  "name_tag": 500,
+  "elytra": 20000,
+  "trident": 3000,
+  "totem_of_undying": 5000,
+  "enchanted_golden_apple": 10000,
+  "music_disc_cat": 2000,
+  "experience_bottle": 100,
+  "bucket": 0,
+  "water_bucket": 0,
+  "lava_bucket": 0,
+  "bedrock": 0,
+  "command_block": 0,
+  "barrier": 0,
+  "spawner": 0
+ },
+ "projects": [
+  {
+   "id": "watchtower",
+   "name": "瞭望塔",
+   "description": "在家附近蓋一座瞭望塔。完工獎勵：望遠鏡、指南針與 mana。",
+   "icon": "spyglass",
+   "needs": {
+    "stone_bricks": 192,
+    "oak_log": 64,
+    "lantern": 8
+   },
+   "mana": 30,
+   "reward": {
+    "mana": 60,
+    "items": {
+     "spyglass": 1,
+     "compass": 1
+    }
+   }
+  },
+  {
+   "id": "farmstead",
+   "name": "豐收農莊",
+   "description": "建一座像樣的農莊。完工獎勵：骨粉與種子禮包。",
+   "icon": "hay_block",
+   "needs": {
+    "hay_block": 32,
+    "pumpkin": 16,
+    "white_wool": 32,
+    "oak_fence": 64
+   },
+   "mana": 30,
+   "reward": {
+    "mana": 80,
+    "items": {
+     "bone_meal": 64,
+     "pumpkin_seeds": 8,
+     "melon_seeds": 8
+    }
+   }
+  },
+  {
+   "id": "harbor",
+   "name": "港口與燈塔",
+   "description": "在水邊蓋一座港口。完工獎勵：海晶燈、三叉戟。",
+   "icon": "sea_lantern",
+   "needs": {
+    "prismarine": 128,
+    "spruce_planks": 192,
+    "cooked_salmon": 32
+   },
+   "mana": 80,
+   "reward": {
+    "mana": 120,
+    "items": {
+     "sea_lantern": 16,
+     "trident": 1
+    }
+   }
+  },
+  {
+   "id": "library",
+   "name": "大圖書館",
+   "description": "收藏知識的圖書館。完工獎勵：附魔台組。",
+   "icon": "bookshelf",
+   "needs": {
+    "bookshelf": 32,
+    "paper": 128,
+    "lantern": 16
+   },
+   "mana": 100,
+   "reward": {
+    "mana": 150,
+    "items": {
+     "enchanting_table": 1,
+     "experience_bottle": 32
+    }
+   }
+  }
+ ]
+}
