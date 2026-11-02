@@ -1,0 +1,13 @@
+{
+	"schemaVersion": 1,
+	"id": "manacore-gametest",
+	"version": "1.0.0",
+	"name": "ManaCore GameTest",
+	"environment": "*",
+	"entrypoints": {
+		"fabric-gametest": ["io.github.jun32036.manacore.gametest.ManaCoreGameTest"]
+	},
+	"depends": {
+		"manacore": "*"
+	}
+}
